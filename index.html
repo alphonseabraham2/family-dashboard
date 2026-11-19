@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Family Dashboard">
+  <meta name="description" content="Family Dashboard with family tasks and rewards">
   <title>Family Dashboard</title>
   <style>
     :root {
@@ -33,16 +33,14 @@
     .icon-button, .primary-button { border: 0; border-radius: 10px; height: 42px; cursor: pointer; font-weight: 700; transition: background .15s, box-shadow .15s, transform .15s; }
     .icon-button { width: 42px; background: #fff; color: var(--text); border: 1px solid var(--border); }
     .primary-button { background: var(--blue); color: #fff; padding: 0 17px; }
-    .icon-button[aria-pressed="true"], .primary-button[aria-pressed="true"] { box-shadow: 0 0 0 3px rgba(79,114,190,.25); transform: translateY(1px); }
     .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: 0 6px 18px rgba(40,55,80,.025); }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .card h2 { margin: 0; font-size: 16px; }
     .link { border: 0; background: none; color: var(--blue); font-weight: 700; cursor: pointer; border-radius: 5px; padding: 5px 7px; }
-    .link[aria-pressed="true"] { background: #edf3ff; }
-    button:focus-visible, input:focus-visible, nav a:focus-visible { outline: 3px solid #94b5ff; outline-offset: 2px; }
+    button:focus-visible, input:focus-visible, select:focus-visible, nav a:focus-visible { outline: 3px solid #94b5ff; outline-offset: 2px; }
     .schedule { grid-column: span 8; } .members { grid-column: span 4; }
-    .lists { grid-column: span 7; } .meal { grid-column: span 5; }
+    .lists { grid-column: span 7; } .meal { grid-column: span 5; } .rewards { grid-column: span 12; }
     .schedule-row { display: grid; grid-template-columns: 76px 1fr auto; align-items: center; min-height: 58px; border-top: 1px solid var(--border); }
     .schedule-row:first-of-type { border-top: 0; }
     .time { color: var(--muted); font-size: 13px; }
@@ -50,14 +48,32 @@
     .event-dot { width: 9px; height: 9px; border-radius: 50%; }
     .tag { font-size: 12px; color: var(--muted); background: var(--bg); padding: 6px 9px; border-radius: 20px; }
     .member { display: flex; align-items: center; gap: 11px; padding: 9px 0; }
-    .member-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 800; }
+    .member-avatar { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 800; }
     .member strong { display: block; font-size: 14px; } .member small { color: var(--muted); }
-    .status { margin-left: auto; color: var(--green); font-size: 12px; }
+    .member-details { min-width: 0; }
+    .status { margin-left: auto; color: var(--green); font-size: 12px; white-space: nowrap; }
+    .member-points { color: #a87300; font-size: 12px; font-weight: 750; white-space: nowrap; }
     .progress { height: 7px; background: var(--border); border-radius: 20px; overflow: hidden; margin: 14px 0 18px; }
     .progress div { width: 0; height: 100%; background: var(--green); border-radius: 20px; transition: width .2s; }
-    .task { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 14px; }
-    .task input { width: 19px; height: 19px; margin: 0; accent-color: var(--green); cursor: pointer; }
-    .task.done { color: var(--muted); text-decoration: line-through; }
+    .task { display: grid; grid-template-columns: 19px minmax(100px, 1fr) 68px minmax(100px, 130px); align-items: center; gap: 9px; padding: 9px 0; font-size: 14px; }
+    .task input[type="checkbox"] { width: 19px; height: 19px; margin: 0; accent-color: var(--green); cursor: pointer; }
+    .task label { cursor: pointer; }
+    .task.done label { color: var(--muted); text-decoration: line-through; }
+    .task select, .task-points, .redeem-form input, .redeem-form select { min-width: 0; border: 1px solid var(--border); border-radius: 7px; padding: 6px 7px; color: var(--text); background: #fff; font: inherit; font-size: 12px; }
+    .task-points-wrap { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; }
+    .task-points { width: 48px; }
+    .helper { margin: -7px 0 12px; color: var(--muted); font-size: 12px; }
+    .reward-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .reward-balance { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .reward-balance strong { display: block; font-size: 14px; }
+    .reward-balance span { display: block; margin-top: 5px; color: #a87300; font-weight: 750; font-size: 13px; }
+    .redeem-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border); }
+    .redeem-form label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
+    .redeem-form select { min-width: 130px; }
+    .redeem-form input { width: 100px; }
+    .redeem-form button { min-height: 36px; border: 0; border-radius: 8px; padding: 0 13px; background: var(--blue); color: #fff; font-weight: 700; cursor: pointer; }
+    .reward-message { min-height: 18px; margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+    .reward-history { margin: 10px 0 0; padding-left: 20px; color: var(--muted); font-size: 12px; }
     .meal-box { min-height: 170px; border-radius: 12px; background: linear-gradient(135deg, #dfe8db, #f1e7c9); padding: 18px; display: flex; flex-direction: column; justify-content: flex-end; }
     .meal-box strong { font-family: Georgia, serif; font-size: 20px; }
     .meal-box span { margin-top: 5px; color: #64705f; font-size: 13px; }
@@ -75,6 +91,9 @@
       nav a { height: 52px; } main { padding: 24px 16px 86px; }
       .top-actions .icon-button { display: none; } h1 { font-size: 27px; }
       .schedule-row { grid-template-columns: 62px 1fr; } .tag { display: none; }
+      .task { grid-template-columns: 19px minmax(75px, 1fr) 62px minmax(84px, 100px); gap: 5px; font-size: 12px; }
+      .task select, .task-points { padding: 5px 3px; font-size: 11px; }
+      .reward-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
   </style>
 </head>
@@ -86,9 +105,9 @@
         <a class="active" href="#dashboard"><span class="nav-icon">◫</span><span class="label">Dashboard</span></a>
         <a href="#calendar"><span class="nav-icon">▦</span><span class="label">Calendar</span></a>
         <a href="#tasks"><span class="nav-icon">✓</span><span class="label">Tasks</span></a>
-        <a href="#lists"><span class="nav-icon">☷</span><span class="label">Lists</span></a>
+        <a href="#rewards"><span class="nav-icon">★</span><span class="label">Rewards</span></a>
       </nav>
-      <div class="profile"><div class="avatar">AA</div><div><strong>Arun</strong><small>Parent</small></div></div>
+      <div class="profile"><div class="avatar">A</div><div><strong>Arun</strong><small>Parent</small></div></div>
     </aside>
     <main id="dashboard">
       <header class="topbar">
@@ -111,27 +130,47 @@
         </article>
         <article class="card members">
           <div class="card-header"><h2>Family</h2><button class="link" type="button" aria-pressed="false">Manage</button></div>
-          <div class="member"><div class="member-avatar" style="background:#e0a27f">A</div><div><strong>Arun</strong><small>Parent</small></div><span class="status">● Home</span></div>
-          <div class="member"><div class="member-avatar" style="background:#7593bd">J</div><div><strong>Jaisy</strong><small>Parent</small></div><span class="status">● Home</span></div>
-          <div class="member"><div class="member-avatar" style="background:#88b39d">Jo</div><div><strong>Joanna</strong><small>Child</small></div><span class="status" style="color:var(--orange)">● School</span></div>
-          <div class="member"><div class="member-avatar" style="background:#aa91c2">J</div><div><strong>Joshua</strong><small>Child</small></div><span class="status" style="color:var(--orange)">● School</span></div>
+          <div class="member" data-member="Arun"><div class="member-avatar" style="background:#e0a27f">A</div><div class="member-details"><strong>Arun</strong></div><span class="status">● Home</span><span class="member-points" aria-label="Arun reward points">★ <span class="points-value">0</span></span></div>
+          <div class="member" data-member="Jaisy"><div class="member-avatar" style="background:#7593bd">J</div><div class="member-details"><strong>Jaisy</strong></div><span class="status">● Home</span><span class="member-points" aria-label="Jaisy reward points">★ <span class="points-value">0</span></span></div>
+          <div class="member" data-member="Joanna"><div class="member-avatar" style="background:#88b39d">Jo</div><div class="member-details"><strong>Joanna</strong></div><span class="status" style="color:var(--orange)">● School</span><span class="member-points" aria-label="Joanna reward points">★ <span class="points-value">0</span></span></div>
+          <div class="member" data-member="Joshua"><div class="member-avatar" style="background:#aa91c2">J</div><div class="member-details"><strong>Joshua</strong></div><span class="status" style="color:var(--orange)">● School</span><span class="member-points" aria-label="Joshua reward points">★ <span class="points-value">0</span></span></div>
         </article>
         <article class="card lists" id="tasks">
-          <div class="card-header" id="lists"><h2>Weekly Tasks</h2><button class="link" type="button" aria-pressed="false">View all</button></div>
+          <div class="card-header"><h2>Weekly Tasks</h2><button class="link" id="view-tasks" type="button" aria-pressed="false">View all</button></div>
+          <p class="helper">Choose who earns each task's stars and how many. Stars are awarded once when a task is first completed.</p>
           <div class="progress" role="progressbar" aria-label="Tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div></div></div>
-          <div class="task"><input type="checkbox" id="task-kitchen" checked><label for="task-kitchen">Clean the kitchen</label></div>
-          <div class="task"><input type="checkbox" id="task-groceries"><label for="task-groceries">Order groceries</label></div>
-          <div class="task"><input type="checkbox" id="task-plants"><label for="task-plants">Water the plants</label></div>
-          <div class="task"><input type="checkbox" id="task-dentist"><label for="task-dentist">Schedule dentist appointment</label></div>
+          <div class="task" data-task-id="kitchen"><input type="checkbox" id="task-kitchen"><label for="task-kitchen">Clean the kitchen</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Clean the kitchen"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Clean the kitchen"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select></div>
+          <div class="task" data-task-id="groceries"><input type="checkbox" id="task-groceries"><label for="task-groceries">Order groceries</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Order groceries"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Order groceries"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select></div>
+          <div class="task" data-task-id="plants"><input type="checkbox" id="task-plants"><label for="task-plants">Water the plants</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Water the plants"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Water the plants"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select></div>
+          <div class="task" data-task-id="dentist"><input type="checkbox" id="task-dentist"><label for="task-dentist">Schedule dentist appointment</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Schedule dentist appointment"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Schedule dentist appointment"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select></div>
         </article>
         <article class="card meal">
           <div class="card-header"><h2>Tonight's Meal</h2><button class="link" id="edit-meal" type="button" aria-pressed="false">Edit</button></div>
           <div class="meal-box"><strong id="meal-name">Roasted salmon</strong><span>With vegetables &amp; rice</span></div>
         </article>
+        <article class="card rewards" id="rewards">
+          <div class="card-header"><h2>Rewards</h2></div>
+          <div class="reward-summary" aria-label="Family reward point balances">
+            <div class="reward-balance" data-balance="Arun"><strong>Arun</strong><span>★ <span class="points-value">0</span> stars</span></div>
+            <div class="reward-balance" data-balance="Jaisy"><strong>Jaisy</strong><span>★ <span class="points-value">0</span> stars</span></div>
+            <div class="reward-balance" data-balance="Joanna"><strong>Joanna</strong><span>★ <span class="points-value">0</span> stars</span></div>
+            <div class="reward-balance" data-balance="Joshua"><strong>Joshua</strong><span>★ <span class="points-value">0</span> stars</span></div>
+          </div>
+          <form class="redeem-form" id="redeem-form">
+            <label>Redeem for<select id="redeem-member"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select></label>
+            <label>Reward<input id="redeem-reward" type="text" placeholder="Choose a reward" required maxlength="80"></label>
+            <label>Cost in stars<input id="redeem-cost" type="number" min="1" max="100000" value="10" required></label>
+            <button type="submit">Redeem stars</button>
+          </form>
+          <p class="reward-message" id="reward-message" role="status" aria-live="polite"></p>
+          <ul class="reward-history" id="reward-history" aria-label="Redeemed rewards"></ul>
+        </article>
       </section>
     </main>
   </div>
   <script>
+    const STORAGE_KEY = 'family-dashboard-rewards-v1';
+    const members = ['Arun', 'Jaisy', 'Joanna', 'Joshua'];
     const dateElement = document.getElementById('current-date');
     const timeElement = document.getElementById('current-time');
 
@@ -147,20 +186,124 @@
       }).format(now);
     }
 
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (saved && saved.points && saved.tasks) return saved;
+      } catch (error) {
+        console.warn('Could not load saved family rewards.', error);
+      }
+      return { points: Object.fromEntries(members.map(name => [name, 0])), tasks: {}, history: [] };
+    }
+
+    let state = loadState();
+    members.forEach(name => { state.points[name] = Math.max(0, Number(state.points[name]) || 0); });
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (error) {
+        console.warn('Could not save family rewards in this browser.', error);
+      }
+    }
+
+    function renderPoints() {
+      document.querySelectorAll('[data-member], [data-balance]').forEach(element => {
+        const name = element.dataset.member || element.dataset.balance;
+        const value = element.querySelector('.points-value');
+        if (value) value.textContent = state.points[name] || 0;
+      });
+    }
+
     function updateTaskProgress() {
-      const tasks = [...document.querySelectorAll('.task input[type="checkbox"]')];
-      const completed = tasks.filter(task => task.checked).length;
+      const tasks = [...document.querySelectorAll('.task[data-task-id]')];
+      const completed = tasks.filter(row => row.querySelector('input[type="checkbox"]').checked).length;
       const percent = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
       document.querySelector('.progress div').style.width = `${percent}%`;
       document.querySelector('.progress').setAttribute('aria-valuenow', percent);
-      tasks.forEach(task => task.closest('.task').classList.toggle('done', task.checked));
+      tasks.forEach(row => row.classList.toggle('done', row.querySelector('input[type="checkbox"]').checked));
     }
 
-    document.querySelectorAll('.task input[type="checkbox"]').forEach(checkbox => {
-      checkbox.addEventListener('change', updateTaskProgress);
+    function renderHistory() {
+      const list = document.getElementById('reward-history');
+      list.replaceChildren();
+      (state.history || []).slice(-5).reverse().forEach(item => {
+        const entry = document.createElement('li');
+        entry.textContent = `${item.member} redeemed ${item.cost} ★ for ${item.reward}`;
+        list.append(entry);
+      });
+    }
+
+    function restoreTasks() {
+      document.querySelectorAll('.task[data-task-id]').forEach(row => {
+        const config = state.tasks[row.dataset.taskId];
+        if (!config) return;
+        row.querySelector('input[type="checkbox"]').checked = Boolean(config.completed);
+        row.querySelector('.task-points').value = Math.max(1, Math.min(1000, Number(config.points) || 10));
+        if (members.includes(config.assignee)) row.querySelector('.task-assignee').value = config.assignee;
+        row.dataset.awarded = config.awarded ? 'true' : 'false';
+      });
+    }
+
+    function persistTask(row) {
+      const id = row.dataset.taskId;
+      const config = state.tasks[id] || { awarded: false };
+      config.completed = row.querySelector('input[type="checkbox"]').checked;
+      config.points = Math.max(1, Math.min(1000, Number(row.querySelector('.task-points').value) || 1));
+      config.assignee = row.querySelector('.task-assignee').value;
+      state.tasks[id] = config;
+      saveState();
+    }
+
+    document.querySelectorAll('.task[data-task-id]').forEach(row => {
+      const checkbox = row.querySelector('input[type="checkbox"]');
+      const pointInput = row.querySelector('.task-points');
+      const assignee = row.querySelector('.task-assignee');
+      checkbox.addEventListener('change', () => {
+        const config = state.tasks[row.dataset.taskId] || { awarded: false };
+        if (checkbox.checked && !config.awarded) {
+          const points = Math.max(1, Math.min(1000, Number(pointInput.value) || 1));
+          const recipient = assignee.value;
+          state.points[recipient] = (state.points[recipient] || 0) + points;
+          config.awarded = true;
+          config.awardedPoints = points;
+          config.awardedTo = recipient;
+          document.getElementById('reward-message').textContent = `${recipient} earned ${points} star${points === 1 ? '' : 's'}!`;
+        }
+        state.tasks[row.dataset.taskId] = config;
+        persistTask(row);
+        renderPoints();
+        updateTaskProgress();
+      });
+      pointInput.addEventListener('change', () => persistTask(row));
+      assignee.addEventListener('change', () => persistTask(row));
     });
 
-    document.querySelectorAll('button:not(#add-task):not(#edit-meal)').forEach(button => {
+    document.getElementById('redeem-form').addEventListener('submit', event => {
+      event.preventDefault();
+      const name = document.getElementById('redeem-member').value;
+      const reward = document.getElementById('redeem-reward').value.trim();
+      const cost = Number(document.getElementById('redeem-cost').value);
+      const message = document.getElementById('reward-message');
+      if (!reward || !Number.isInteger(cost) || cost < 1) {
+        message.textContent = 'Enter a reward and a whole-number star cost greater than zero.';
+        return;
+      }
+      if ((state.points[name] || 0) < cost) {
+        message.textContent = `${name} needs ${cost - (state.points[name] || 0)} more star${cost - (state.points[name] || 0) === 1 ? '' : 's'} for that reward.`;
+        return;
+      }
+      state.points[name] -= cost;
+      state.history = state.history || [];
+      state.history.push({ member: name, reward, cost, date: new Date().toISOString() });
+      saveState();
+      renderPoints();
+      renderHistory();
+      message.textContent = `${name} redeemed ${cost} stars for ${reward}.`;
+      document.getElementById('redeem-reward').value = '';
+    });
+
+    document.querySelectorAll('button[aria-pressed]').forEach(button => {
       button.addEventListener('click', () => {
         button.setAttribute('aria-pressed', button.getAttribute('aria-pressed') !== 'true');
       });
@@ -172,13 +315,37 @@
       const id = `task-${Date.now()}`;
       const row = document.createElement('div');
       row.className = 'task';
+      row.dataset.taskId = id;
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox'; checkbox.id = id;
       const label = document.createElement('label');
       label.htmlFor = id; label.textContent = title.trim();
-      row.append(checkbox, label);
+      const pointsWrap = document.createElement('span');
+      pointsWrap.className = 'task-points-wrap';
+      const pointsInput = document.createElement('input');
+      pointsInput.className = 'task-points'; pointsInput.type = 'number';
+      pointsInput.min = '1'; pointsInput.max = '1000'; pointsInput.value = '10';
+      pointsInput.setAttribute('aria-label', `Stars for ${title.trim()}`);
+      const star = document.createElement('span'); star.textContent = '★';
+      pointsWrap.append(pointsInput, star);
+      const select = document.createElement('select');
+      select.className = 'task-assignee';
+      select.setAttribute('aria-label', `Who earns stars for ${title.trim()}`);
+      members.forEach(name => { const option = document.createElement('option'); option.textContent = name; select.append(option); });
+      row.append(checkbox, label, pointsWrap, select);
       document.querySelector('.lists .progress').after(row);
-      checkbox.addEventListener('change', updateTaskProgress);
+      checkbox.addEventListener('change', () => {
+        const config = state.tasks[id] || { awarded: false };
+        if (checkbox.checked && !config.awarded) {
+          const points = Math.max(1, Math.min(1000, Number(pointsInput.value) || 1));
+          state.points[select.value] = (state.points[select.value] || 0) + points;
+          config.awarded = true; config.awardedPoints = points; config.awardedTo = select.value;
+          document.getElementById('reward-message').textContent = `${select.value} earned ${points} star${points === 1 ? '' : 's'}!`;
+        }
+        state.tasks[id] = config; persistTask(row); renderPoints(); updateTaskProgress();
+      });
+      pointsInput.addEventListener('change', () => persistTask(row));
+      select.addEventListener('change', () => persistTask(row));
       updateTaskProgress();
     });
 
@@ -195,6 +362,9 @@
       });
     });
 
+    restoreTasks();
+    renderPoints();
+    renderHistory();
     updateClock();
     updateTaskProgress();
     setInterval(updateClock, 1000);
