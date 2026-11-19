@@ -3,97 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Family Dashboard with family tasks and rewards">
+  <meta name="description" content="Family Dashboard with family tasks, calendar, and rewards">
   <title>Family Dashboard</title>
   <style>
-    :root {
-      --bg: #f4f7fb; --card: #fff; --text: #192230; --muted: #738195;
-      --navy: #17243a; --blue: #4f72be; --green: #63b89a;
-      --orange: #efa66b; --purple: #9b84c7; --border: #e7ecf3;
+    :root { --bg:#f4f7fb; --card:#fff; --text:#192230; --muted:#738195; --navy:#17243a; --blue:#4f72be; --green:#63b89a; --orange:#efa66b; --purple:#9b84c7; --border:#e7ecf3; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--text); background:var(--bg); }
+    .app { display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+    .sidebar { background:var(--navy); color:#fff; padding:28px 18px; display:flex; flex-direction:column; }
+    .brand { display:flex; align-items:center; gap:10px; padding:0 10px 28px; font-weight:750; }
+    .brand-mark { width:34px; height:34px; border-radius:50%; background:#fff; display:grid; place-items:center; color:var(--navy); }
+    nav { display:grid; gap:6px; }
+    nav a { color:#b9c4d4; text-decoration:none; padding:12px 14px; border-radius:10px; display:flex; align-items:center; gap:12px; font-size:14px; }
+    nav a.active,nav a:hover { background:rgba(255,255,255,.1); color:#fff; }
+    .nav-icon { width:18px; text-align:center; opacity:.95; }
+    .profile { margin-top:auto; display:flex; align-items:center; gap:10px; padding:14px 8px 0; border-top:1px solid rgba(255,255,255,.08); }
+    .avatar { width:38px; height:38px; border-radius:50%; background:#f3c7a8; display:grid; place-items:center; color:#6a3e29; font-weight:700; }
+    .profile small { display:block; color:#9facbf; margin-top:3px; }
+    main { padding:34px 38px 42px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
+    h1 { margin:0; font-family:Georgia,"Times New Roman",serif; font-size:32px; letter-spacing:-.5px; }
+    .date { color:var(--muted); margin-top:7px; font-size:14px; }
+    .top-actions { display:flex; gap:10px; }
+    button { font:inherit; }
+    .icon-button,.primary-button { border:0; border-radius:10px; height:42px; cursor:pointer; font-weight:700; }
+    .icon-button { width:42px; background:#fff; color:var(--text); border:1px solid var(--border); }
+    .primary-button { background:var(--blue); color:#fff; padding:0 17px; }
+    .grid { display:grid; grid-template-columns:repeat(12,1fr); gap:18px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:0 6px 18px rgba(40,55,80,.025); }
+    .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .card h2 { margin:0; font-size:16px; }
+    .link { border:0; background:none; color:var(--blue); font-weight:700; cursor:pointer; border-radius:5px; padding:5px 7px; }
+    button:focus-visible,input:focus-visible,select:focus-visible,nav a:focus-visible { outline:3px solid #94b5ff; outline-offset:2px; }
+    .schedule { grid-column:span 8; } .members { grid-column:span 4; }
+    .lists { grid-column:span 7; } .meal { grid-column:span 5; } .rewards,.calendar-card { grid-column:span 12; }
+    .schedule-row { display:grid; grid-template-columns:76px 1fr auto; align-items:center; min-height:58px; border-top:1px solid var(--border); }
+    .schedule-row:first-of-type { border-top:0; }
+    .time { color:var(--muted); font-size:13px; }
+    .event { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:650; }
+    .event-dot { width:9px; height:9px; border-radius:50%; }
+    .tag { font-size:12px; color:var(--muted); background:var(--bg); padding:6px 9px; border-radius:20px; }
+    .member { display:flex; align-items:center; gap:11px; padding:9px 0; }
+    .member-avatar { width:40px; height:40px; flex:0 0 40px; border-radius:50%; display:grid; place-items:center; color:#fff; font-size:13px; font-weight:800; }
+    .member strong { display:block; font-size:14px; } .member-details { min-width:0; }
+    .status { margin-left:auto; color:var(--green); font-size:12px; white-space:nowrap; }
+    .member-points { color:#a87300; font-size:12px; font-weight:750; white-space:nowrap; }
+    .progress { height:7px; background:var(--border); border-radius:20px; overflow:hidden; margin:14px 0 18px; }
+    .progress div { width:0; height:100%; background:var(--green); border-radius:20px; transition:width .2s; }
+    .task { display:grid; grid-template-columns:19px minmax(100px,1fr) 68px minmax(100px,130px) 140px; align-items:center; gap:9px; padding:9px 0; font-size:14px; }
+    .task input[type="checkbox"] { width:19px; height:19px; margin:0; accent-color:var(--green); cursor:pointer; }
+    .task label { cursor:pointer; }
+    .task.done label { color:var(--muted); text-decoration:line-through; }
+    .task select,.task-points,.task-date,.task-time,.redeem-form input,.redeem-form select { min-width:0; border:1px solid var(--border); border-radius:7px; padding:6px 7px; color:var(--text); background:#fff; font:inherit; font-size:12px; }
+    .task-points-wrap { display:flex; align-items:center; gap:4px; color:var(--muted); font-size:12px; }
+    .task-points { width:48px; } .task-date-time { display:flex; gap:4px; } .task-date { width:94px; } .task-time { width:72px; }
+    .helper { margin:-7px 0 12px; color:var(--muted); font-size:12px; }
+    .reward-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+    .reward-balance { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px; }
+    .reward-balance strong { display:block; font-size:14px; }
+    .reward-balance span { display:block; margin-top:5px; color:#a87300; font-weight:750; font-size:13px; }
+    .redeem-form { display:flex; flex-wrap:wrap; align-items:end; gap:10px; padding-top:15px; border-top:1px solid var(--border); }
+    .redeem-form label { display:grid; gap:5px; color:var(--muted); font-size:12px; }
+    .redeem-form select { min-width:130px; } .redeem-form input { width:100px; }
+    .redeem-form button { min-height:36px; border:0; border-radius:8px; padding:0 13px; background:var(--blue); color:#fff; font-weight:700; cursor:pointer; }
+    .reward-message { min-height:18px; margin:10px 0 0; color:var(--muted); font-size:13px; }
+    .reward-history { margin:10px 0 0; padding-left:20px; color:var(--muted); font-size:12px; }
+    .calendar-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+    .calendar-nav,.view-switcher { display:flex; align-items:center; gap:6px; }
+    .calendar-nav button,.view-switcher button { background:#fff; border:1px solid var(--border); border-radius:8px; padding:7px 10px; color:var(--text); cursor:pointer; }
+    .view-switcher button.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+    #calendar-title { min-width:175px; text-align:center; font-weight:700; }
+    .calendar-grid { display:grid; border-top:1px solid var(--border); border-left:1px solid var(--border); }
+    .calendar-grid.week { grid-template-columns:repeat(7,minmax(0,1fr)); }
+    .calendar-grid.month { grid-template-columns:repeat(7,minmax(0,1fr)); }
+    .calendar-grid.day { grid-template-columns:minmax(0,1fr); }
+    .calendar-heading { padding:9px 5px; text-align:center; color:var(--muted); font-size:12px; font-weight:700; border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
+    .calendar-cell { min-width:0; min-height:115px; padding:7px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); background:#fff; }
+    .calendar-grid.week .calendar-cell { min-height:300px; }
+    .calendar-grid.day .calendar-cell { min-height:330px; }
+    .calendar-cell.outside-month { background:#f9fafc; color:#a2acba; }
+    .calendar-cell.today { background:#f5f8ff; }
+    .calendar-date { display:block; margin-bottom:7px; font-size:12px; font-weight:750; }
+    .calendar-event { display:block; width:100%; margin:4px 0; padding:5px 6px; border:0; border-left:3px solid var(--blue); border-radius:4px; background:#edf3ff; color:var(--text); text-align:left; font-size:11px; line-height:1.35; overflow-wrap:anywhere; cursor:pointer; }
+    .calendar-event.completed { opacity:.62; text-decoration:line-through; }
+    .calendar-event time { display:block; margin-bottom:2px; color:var(--muted); font-size:10px; font-weight:700; }
+    .empty-day { color:var(--muted); font-size:13px; padding:10px 0; }
+    .meal-box { min-height:170px; border-radius:12px; background:linear-gradient(135deg,#dfe8db,#f1e7c9); padding:18px; display:flex; flex-direction:column; justify-content:flex-end; }
+    .meal-box strong { font-family:Georgia,serif; font-size:20px; }
+    .meal-box span { margin-top:5px; color:#64705f; font-size:13px; }
+    @media (max-width:980px) {
+      .app { grid-template-columns:74px 1fr; }
+      .brand span,nav a span.label,.profile div { display:none; }
+      .brand { justify-content:center; padding-inline:0; } nav a { justify-content:center; } .profile { justify-content:center; }
+      .schedule,.members,.lists,.meal { grid-column:span 12; }
+      .calendar-grid.week .calendar-cell { min-height:220px; padding:4px; }
     }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text); background: var(--bg); }
-    .app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
-    .sidebar { background: var(--navy); color: #fff; padding: 28px 18px; display: flex; flex-direction: column; }
-    .brand { display: flex; align-items: center; gap: 10px; padding: 0 10px 28px; font-weight: 750; }
-    .brand-mark { width: 34px; height: 34px; border-radius: 50%; background: #fff; display: grid; place-items: center; color: var(--navy); }
-    nav { display: grid; gap: 6px; }
-    nav a { color: #b9c4d4; text-decoration: none; padding: 12px 14px; border-radius: 10px; display: flex; align-items: center; gap: 12px; font-size: 14px; }
-    nav a.active, nav a:hover { background: rgba(255,255,255,.1); color: #fff; }
-    .nav-icon { width: 18px; text-align: center; opacity: .95; }
-    .profile { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 14px 8px 0; border-top: 1px solid rgba(255,255,255,.08); }
-    .avatar { width: 38px; height: 38px; border-radius: 50%; background: #f3c7a8; display: grid; place-items: center; color: #6a3e29; font-weight: 700; }
-    .profile small { display: block; color: #9facbf; margin-top: 3px; }
-    main { padding: 34px 38px 42px; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
-    h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 32px; letter-spacing: -.5px; }
-    .date { color: var(--muted); margin-top: 7px; font-size: 14px; }
-    .top-actions { display: flex; gap: 10px; }
-    button { font: inherit; }
-    .icon-button, .primary-button { border: 0; border-radius: 10px; height: 42px; cursor: pointer; font-weight: 700; transition: background .15s, box-shadow .15s, transform .15s; }
-    .icon-button { width: 42px; background: #fff; color: var(--text); border: 1px solid var(--border); }
-    .primary-button { background: var(--blue); color: #fff; padding: 0 17px; }
-    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: 0 6px 18px rgba(40,55,80,.025); }
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .card h2 { margin: 0; font-size: 16px; }
-    .link { border: 0; background: none; color: var(--blue); font-weight: 700; cursor: pointer; border-radius: 5px; padding: 5px 7px; }
-    button:focus-visible, input:focus-visible, select:focus-visible, nav a:focus-visible { outline: 3px solid #94b5ff; outline-offset: 2px; }
-    .schedule { grid-column: span 8; } .members { grid-column: span 4; }
-    .lists { grid-column: span 7; } .meal { grid-column: span 5; } .rewards { grid-column: span 12; }
-    .schedule-row { display: grid; grid-template-columns: 76px 1fr auto; align-items: center; min-height: 58px; border-top: 1px solid var(--border); }
-    .schedule-row:first-of-type { border-top: 0; }
-    .time { color: var(--muted); font-size: 13px; }
-    .event { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 650; }
-    .event-dot { width: 9px; height: 9px; border-radius: 50%; }
-    .tag { font-size: 12px; color: var(--muted); background: var(--bg); padding: 6px 9px; border-radius: 20px; }
-    .member { display: flex; align-items: center; gap: 11px; padding: 9px 0; }
-    .member-avatar { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 800; }
-    .member strong { display: block; font-size: 14px; } .member small { color: var(--muted); }
-    .member-details { min-width: 0; }
-    .status { margin-left: auto; color: var(--green); font-size: 12px; white-space: nowrap; }
-    .member-points { color: #a87300; font-size: 12px; font-weight: 750; white-space: nowrap; }
-    .progress { height: 7px; background: var(--border); border-radius: 20px; overflow: hidden; margin: 14px 0 18px; }
-    .progress div { width: 0; height: 100%; background: var(--green); border-radius: 20px; transition: width .2s; }
-    .task { display: grid; grid-template-columns: 19px minmax(100px, 1fr) 68px minmax(100px, 130px); align-items: center; gap: 9px; padding: 9px 0; font-size: 14px; }
-    .task input[type="checkbox"] { width: 19px; height: 19px; margin: 0; accent-color: var(--green); cursor: pointer; }
-    .task label { cursor: pointer; }
-    .task.done label { color: var(--muted); text-decoration: line-through; }
-    .task select, .task-points, .redeem-form input, .redeem-form select { min-width: 0; border: 1px solid var(--border); border-radius: 7px; padding: 6px 7px; color: var(--text); background: #fff; font: inherit; font-size: 12px; }
-    .task-points-wrap { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; }
-    .task-points { width: 48px; }
-    .helper { margin: -7px 0 12px; color: var(--muted); font-size: 12px; }
-    .reward-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
-    .reward-balance { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
-    .reward-balance strong { display: block; font-size: 14px; }
-    .reward-balance span { display: block; margin-top: 5px; color: #a87300; font-weight: 750; font-size: 13px; }
-    .redeem-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border); }
-    .redeem-form label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
-    .redeem-form select { min-width: 130px; }
-    .redeem-form input { width: 100px; }
-    .redeem-form button { min-height: 36px; border: 0; border-radius: 8px; padding: 0 13px; background: var(--blue); color: #fff; font-weight: 700; cursor: pointer; }
-    .reward-message { min-height: 18px; margin: 10px 0 0; color: var(--muted); font-size: 13px; }
-    .reward-history { margin: 10px 0 0; padding-left: 20px; color: var(--muted); font-size: 12px; }
-    .meal-box { min-height: 170px; border-radius: 12px; background: linear-gradient(135deg, #dfe8db, #f1e7c9); padding: 18px; display: flex; flex-direction: column; justify-content: flex-end; }
-    .meal-box strong { font-family: Georgia, serif; font-size: 20px; }
-    .meal-box span { margin-top: 5px; color: #64705f; font-size: 13px; }
-    @media (max-width: 980px) {
-      .app { grid-template-columns: 74px 1fr; }
-      .brand span, nav a span.label, .profile div { display: none; }
-      .brand { justify-content: center; padding-inline: 0; } nav a { justify-content: center; }
-      .profile { justify-content: center; }
-      .schedule, .members, .lists, .meal { grid-column: span 12; }
-    }
-    @media (max-width: 620px) {
-      .app { display: block; }
-      .sidebar { position: fixed; z-index: 10; bottom: 0; left: 0; right: 0; height: 68px; padding: 8px; display: block; }
-      .brand, .profile { display: none; } nav { grid-template-columns: repeat(4, 1fr); }
-      nav a { height: 52px; } main { padding: 24px 16px 86px; }
-      .top-actions .icon-button { display: none; } h1 { font-size: 27px; }
-      .schedule-row { grid-template-columns: 62px 1fr; } .tag { display: none; }
-      .task { grid-template-columns: 19px minmax(75px, 1fr) 62px minmax(84px, 100px); gap: 5px; font-size: 12px; }
-      .task select, .task-points { padding: 5px 3px; font-size: 11px; }
-      .reward-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (max-width:620px) {
+      .app { display:block; }
+      .sidebar { position:fixed; z-index:10; bottom:0; left:0; right:0; height:68px; padding:8px; display:block; }
+      .brand,.profile { display:none; } nav { grid-template-columns:repeat(4,1fr); }
+      nav a { height:52px; } main { padding:24px 12px 86px; }
+      .top-actions .icon-button { display:none; } h1 { font-size:27px; }
+      .schedule-row { grid-template-columns:62px 1fr; } .tag { display:none; }
+      .task { grid-template-columns:19px minmax(65px,1fr) 55px; gap:5px; font-size:12px; }
+      .task-points-wrap { grid-column:2; grid-row:2; } .task select { grid-column:3; grid-row:2; }
+      .task-date-time { grid-column:2 / 4; grid-row:3; }
+      .task-date { flex:1; width:auto; } .task-time { width:85px; }
+      .reward-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .calendar-toolbar { justify-content:center; }
+      .calendar-grid.week { grid-template-columns:repeat(7,minmax(85px,1fr)); overflow-x:auto; }
+      .calendar-grid.month { grid-template-columns:repeat(7,minmax(38px,1fr)); }
+      .calendar-grid.week .calendar-cell { min-height:190px; }
+      .calendar-grid.month .calendar-cell { min-height:78px; padding:3px; }
+      .calendar-grid.month .calendar-event { padding:3px; font-size:9px; }
+      .calendar-grid.month .calendar-event time { font-size:8px; }
+      .calendar-grid.month .calendar-heading { font-size:10px; padding:6px 1px; }
+      .calendar-nav { justify-content:center; }
+      #calendar-title { min-width:145px; }
     }
   </style>
 </head>
@@ -111,18 +137,12 @@
     </aside>
     <main id="dashboard">
       <header class="topbar">
-        <div>
-          <h1>Good morning, Arun</h1>
-          <div class="date"><time id="current-date"></time><span aria-hidden="true"> · </span><time id="current-time" aria-label="Current local time"></time></div>
-        </div>
-        <div class="top-actions">
-          <button class="icon-button" type="button" aria-label="Notifications" aria-pressed="false">♢</button>
-          <button class="primary-button" id="add-task" type="button">+ Add new</button>
-        </div>
+        <div><h1>Good morning, Arun</h1><div class="date"><time id="current-date"></time><span aria-hidden="true"> · </span><time id="current-time" aria-label="Current local time"></time></div></div>
+        <div class="top-actions"><button class="icon-button" type="button" aria-label="Notifications" aria-pressed="false">♢</button><button class="primary-button" id="add-task" type="button">+ Add new</button></div>
       </header>
       <section class="grid">
-        <article class="card schedule" id="calendar">
-          <div class="card-header"><h2>Today's Schedule</h2><button class="link" type="button" aria-pressed="false">View calendar</button></div>
+        <article class="card schedule">
+          <div class="card-header"><h2>Today's Schedule</h2><button class="link" type="button" data-calendar-link>View calendar</button></div>
           <div class="schedule-row"><div class="time">8:30 AM</div><div class="event"><span class="event-dot" style="background:var(--orange)"></span>School drop-off</div><span class="tag">Everyone</span></div>
           <div class="schedule-row"><div class="time">10:00 AM</div><div class="event"><span class="event-dot" style="background:var(--blue)"></span>Team meeting</div><span class="tag">Arun</span></div>
           <div class="schedule-row"><div class="time">3:30 PM</div><div class="event"><span class="event-dot" style="background:var(--purple)"></span>Soccer practice</div><span class="tag">Joshua</span></div>
@@ -135,35 +155,33 @@
           <div class="member" data-member="Joanna"><div class="member-avatar" style="background:#88b39d">Jo</div><div class="member-details"><strong>Joanna</strong></div><span class="status" style="color:var(--orange)">● School</span><span class="member-points" aria-label="Joanna reward points">★ <span class="points-value">0</span></span></div>
           <div class="member" data-member="Joshua"><div class="member-avatar" style="background:#aa91c2">J</div><div class="member-details"><strong>Joshua</strong></div><span class="status" style="color:var(--orange)">● School</span><span class="member-points" aria-label="Joshua reward points">★ <span class="points-value">0</span></span></div>
         </article>
+        <article class="card calendar-card" id="calendar">
+          <div class="card-header"><h2>Family Calendar</h2></div>
+          <div class="calendar-toolbar">
+            <div class="calendar-nav"><button type="button" id="calendar-prev" aria-label="Previous period">‹</button><button type="button" id="calendar-today">Today</button><button type="button" id="calendar-next" aria-label="Next period">›</button><strong id="calendar-title"></strong></div>
+            <div class="view-switcher" role="group" aria-label="Calendar view">
+              <button type="button" data-view="day">Day</button><button type="button" data-view="week" class="active" aria-pressed="true">Week</button><button type="button" data-view="month" aria-pressed="false">Month</button>
+            </div>
+          </div>
+          <div id="calendar-grid" class="calendar-grid week" aria-live="polite"></div>
+        </article>
         <article class="card lists" id="tasks">
           <div class="card-header"><h2>Weekly Tasks</h2><button class="link" id="view-tasks" type="button" aria-pressed="false">View all</button></div>
-          <p class="helper">Choose who earns each task's stars and how many. Stars are awarded once when a task is first completed.</p>
+          <p class="helper">Set a date, time, star value, and recipient for each task. Completing a task awards its stars once.</p>
           <div class="progress" role="progressbar" aria-label="Tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div></div></div>
-          <div class="task" data-task-id="kitchen"><input type="checkbox" id="task-kitchen"><label for="task-kitchen">Clean the kitchen</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Clean the kitchen"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Clean the kitchen"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select></div>
-          <div class="task" data-task-id="groceries"><input type="checkbox" id="task-groceries"><label for="task-groceries">Order groceries</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Order groceries"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Order groceries"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select></div>
-          <div class="task" data-task-id="plants"><input type="checkbox" id="task-plants"><label for="task-plants">Water the plants</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Water the plants"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Water the plants"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select></div>
-          <div class="task" data-task-id="dentist"><input type="checkbox" id="task-dentist"><label for="task-dentist">Schedule dentist appointment</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Schedule dentist appointment"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Schedule dentist appointment"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select></div>
+          <div class="task" data-task-id="kitchen"><input type="checkbox" id="task-kitchen"><label for="task-kitchen">Clean the kitchen</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Clean the kitchen"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Clean the kitchen"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select><span class="task-date-time"><input class="task-date" type="date" aria-label="Date for Clean the kitchen"><input class="task-time" type="time" value="08:30" aria-label="Time for Clean the kitchen"></span></div>
+          <div class="task" data-task-id="groceries"><input type="checkbox" id="task-groceries"><label for="task-groceries">Order groceries</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Order groceries"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Order groceries"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select><span class="task-date-time"><input class="task-date" type="date" aria-label="Date for Order groceries"><input class="task-time" type="time" value="10:00" aria-label="Time for Order groceries"></span></div>
+          <div class="task" data-task-id="plants"><input type="checkbox" id="task-plants"><label for="task-plants">Water the plants</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Water the plants"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Water the plants"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select><span class="task-date-time"><input class="task-date" type="date" aria-label="Date for Water the plants"><input class="task-time" type="time" value="15:30" aria-label="Time for Water the plants"></span></div>
+          <div class="task" data-task-id="dentist"><input type="checkbox" id="task-dentist"><label for="task-dentist">Schedule dentist appointment</label><span class="task-points-wrap"><input class="task-points" type="number" min="1" max="1000" value="10" aria-label="Stars for Schedule dentist appointment"><span>★</span></span><select class="task-assignee" aria-label="Who earns stars for Schedule dentist appointment"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select><span class="task-date-time"><input class="task-date" type="date" aria-label="Date for Schedule dentist appointment"><input class="task-time" type="time" value="18:00" aria-label="Time for Schedule dentist appointment"></span></div>
         </article>
-        <article class="card meal">
-          <div class="card-header"><h2>Tonight's Meal</h2><button class="link" id="edit-meal" type="button" aria-pressed="false">Edit</button></div>
-          <div class="meal-box"><strong id="meal-name">Roasted salmon</strong><span>With vegetables &amp; rice</span></div>
-        </article>
+        <article class="card meal"><div class="card-header"><h2>Tonight's Meal</h2><button class="link" id="edit-meal" type="button" aria-pressed="false">Edit</button></div><div class="meal-box"><strong id="meal-name">Roasted salmon</strong><span>With vegetables &amp; rice</span></div></article>
         <article class="card rewards" id="rewards">
           <div class="card-header"><h2>Rewards</h2></div>
           <div class="reward-summary" aria-label="Family reward point balances">
-            <div class="reward-balance" data-balance="Arun"><strong>Arun</strong><span>★ <span class="points-value">0</span> stars</span></div>
-            <div class="reward-balance" data-balance="Jaisy"><strong>Jaisy</strong><span>★ <span class="points-value">0</span> stars</span></div>
-            <div class="reward-balance" data-balance="Joanna"><strong>Joanna</strong><span>★ <span class="points-value">0</span> stars</span></div>
-            <div class="reward-balance" data-balance="Joshua"><strong>Joshua</strong><span>★ <span class="points-value">0</span> stars</span></div>
+            <div class="reward-balance" data-balance="Arun"><strong>Arun</strong><span>★ <span class="points-value">0</span> stars</span></div><div class="reward-balance" data-balance="Jaisy"><strong>Jaisy</strong><span>★ <span class="points-value">0</span> stars</span></div><div class="reward-balance" data-balance="Joanna"><strong>Joanna</strong><span>★ <span class="points-value">0</span> stars</span></div><div class="reward-balance" data-balance="Joshua"><strong>Joshua</strong><span>★ <span class="points-value">0</span> stars</span></div>
           </div>
-          <form class="redeem-form" id="redeem-form">
-            <label>Redeem for<select id="redeem-member"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select></label>
-            <label>Reward<input id="redeem-reward" type="text" placeholder="Choose a reward" required maxlength="80"></label>
-            <label>Cost in stars<input id="redeem-cost" type="number" min="1" max="100000" value="10" required></label>
-            <button type="submit">Redeem stars</button>
-          </form>
-          <p class="reward-message" id="reward-message" role="status" aria-live="polite"></p>
-          <ul class="reward-history" id="reward-history" aria-label="Redeemed rewards"></ul>
+          <form class="redeem-form" id="redeem-form"><label>Redeem for<select id="redeem-member"><option>Arun</option><option>Jaisy</option><option>Joanna</option><option>Joshua</option></select></label><label>Reward<input id="redeem-reward" type="text" placeholder="Choose a reward" required maxlength="80"></label><label>Cost in stars<input id="redeem-cost" type="number" min="1" max="100000" value="10" required></label><button type="submit">Redeem stars</button></form>
+          <p class="reward-message" id="reward-message" role="status" aria-live="polite"></p><ul class="reward-history" id="reward-history" aria-label="Redeemed rewards"></ul>
         </article>
       </section>
     </main>
@@ -171,42 +189,40 @@
   <script>
     const STORAGE_KEY = 'family-dashboard-rewards-v1';
     const members = ['Arun', 'Jaisy', 'Joanna', 'Joshua'];
+    const defaultTimes = { kitchen:'08:30', groceries:'10:00', plants:'15:30', dentist:'18:00' };
     const dateElement = document.getElementById('current-date');
     const timeElement = document.getElementById('current-time');
+    const calendarGrid = document.getElementById('calendar-grid');
+    let calendarView = 'week';
+    let calendarCursor = new Date();
+    calendarCursor.setHours(0, 0, 0, 0);
 
+    function localDateString(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
     function updateClock() {
       const now = new Date();
-      dateElement.dateTime = now.toISOString().slice(0, 10);
-      dateElement.textContent = new Intl.DateTimeFormat(undefined, {
-        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
-      }).format(now);
+      dateElement.dateTime = localDateString(now);
+      dateElement.textContent = new Intl.DateTimeFormat(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' }).format(now);
       timeElement.dateTime = now.toISOString();
-      timeElement.textContent = new Intl.DateTimeFormat(undefined, {
-        hour: 'numeric', minute: '2-digit', second: '2-digit'
-      }).format(now);
+      timeElement.textContent = new Intl.DateTimeFormat(undefined, { hour:'numeric', minute:'2-digit', second:'2-digit' }).format(now);
     }
-
     function loadState() {
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
         if (saved && saved.points && saved.tasks) return saved;
-      } catch (error) {
-        console.warn('Could not load saved family rewards.', error);
-      }
-      return { points: Object.fromEntries(members.map(name => [name, 0])), tasks: {}, history: [] };
+      } catch (error) { console.warn('Could not load saved family rewards.', error); }
+      return { points:Object.fromEntries(members.map(name => [name, 0])), tasks:{}, history:[] };
     }
-
     let state = loadState();
     members.forEach(name => { state.points[name] = Math.max(0, Number(state.points[name]) || 0); });
-
     function saveState() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch (error) {
-        console.warn('Could not save family rewards in this browser.', error);
-      }
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+      catch (error) { console.warn('Could not save family data in this browser.', error); }
     }
-
     function renderPoints() {
       document.querySelectorAll('[data-member], [data-balance]').forEach(element => {
         const name = element.dataset.member || element.dataset.balance;
@@ -214,16 +230,14 @@
         if (value) value.textContent = state.points[name] || 0;
       });
     }
-
     function updateTaskProgress() {
-      const tasks = [...document.querySelectorAll('.task[data-task-id]')];
-      const completed = tasks.filter(row => row.querySelector('input[type="checkbox"]').checked).length;
-      const percent = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
+      const rows = [...document.querySelectorAll('.task[data-task-id]')];
+      const completed = rows.filter(row => row.querySelector('input[type="checkbox"]').checked).length;
+      const percent = rows.length ? Math.round(completed / rows.length * 100) : 0;
       document.querySelector('.progress div').style.width = `${percent}%`;
       document.querySelector('.progress').setAttribute('aria-valuenow', percent);
-      tasks.forEach(row => row.classList.toggle('done', row.querySelector('input[type="checkbox"]').checked));
+      rows.forEach(row => row.classList.toggle('done', row.querySelector('input[type="checkbox"]').checked));
     }
-
     function renderHistory() {
       const list = document.getElementById('reward-history');
       list.replaceChildren();
@@ -233,140 +247,177 @@
         list.append(entry);
       });
     }
-
-    function restoreTasks() {
-      document.querySelectorAll('.task[data-task-id]').forEach(row => {
-        const config = state.tasks[row.dataset.taskId];
-        if (!config) return;
-        row.querySelector('input[type="checkbox"]').checked = Boolean(config.completed);
-        row.querySelector('.task-points').value = Math.max(1, Math.min(1000, Number(config.points) || 10));
-        if (members.includes(config.assignee)) row.querySelector('.task-assignee').value = config.assignee;
-        row.dataset.awarded = config.awarded ? 'true' : 'false';
-      });
+    function getTaskData(row) {
+      return {
+        id:row.dataset.taskId,
+        title:row.querySelector('label').textContent,
+        completed:row.querySelector('input[type="checkbox"]').checked,
+        date:row.querySelector('.task-date').value,
+        time:row.querySelector('.task-time').value || '00:00',
+        assignee:row.querySelector('.task-assignee').value
+      };
     }
-
+    function renderCalendar() {
+      const tasks = [...document.querySelectorAll('.task[data-task-id]')].map(getTaskData).filter(task => task.date);
+      const title = document.getElementById('calendar-title');
+      calendarGrid.replaceChildren();
+      calendarGrid.className = `calendar-grid ${calendarView}`;
+      document.querySelectorAll('.view-switcher button').forEach(button => {
+        const active = button.dataset.view === calendarView;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+      let dates = [];
+      if (calendarView === 'day') {
+        dates = [new Date(calendarCursor)];
+        title.textContent = new Intl.DateTimeFormat(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' }).format(calendarCursor);
+      } else if (calendarView === 'week') {
+        const start = new Date(calendarCursor);
+        start.setDate(start.getDate() - start.getDay());
+        dates = Array.from({length:7}, (_, index) => { const date = new Date(start); date.setDate(start.getDate() + index); return date; });
+        title.textContent = `${new Intl.DateTimeFormat(undefined, {month:'short', day:'numeric'}).format(dates[0])} – ${new Intl.DateTimeFormat(undefined, {month:'short', day:'numeric', year:'numeric'}).format(dates[6])}`;
+      } else {
+        const first = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
+        const start = new Date(first);
+        start.setDate(first.getDate() - first.getDay());
+        dates = Array.from({length:42}, (_, index) => { const date = new Date(start); date.setDate(start.getDate() + index); return date; });
+        title.textContent = new Intl.DateTimeFormat(undefined, {month:'long', year:'numeric'}).format(calendarCursor);
+      }
+      const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const addCell = (date, heading = false) => {
+        const cell = document.createElement('div');
+        if (heading) {
+          cell.className = 'calendar-heading';
+          cell.textContent = weekdays[date.getDay()];
+          calendarGrid.append(cell);
+          return;
+        }
+        cell.className = 'calendar-cell';
+        if (calendarView === 'month' && date.getMonth() !== calendarCursor.getMonth()) cell.classList.add('outside-month');
+        if (localDateString(date) === localDateString(new Date())) cell.classList.add('today');
+        const dayLabel = document.createElement('span');
+        dayLabel.className = 'calendar-date';
+        dayLabel.textContent = calendarView === 'day' ? new Intl.DateTimeFormat(undefined, {weekday:'long', month:'long', day:'numeric'}).format(date) : date.getDate();
+        cell.append(dayLabel);
+        const dayTasks = tasks.filter(task => task.date === localDateString(date)).sort((a,b) => a.time.localeCompare(b.time));
+        dayTasks.forEach(task => {
+          const event = document.createElement('button');
+          event.type = 'button';
+          event.className = `calendar-event${task.completed ? ' completed' : ''}`;
+          event.setAttribute('aria-label', `${task.time}, ${task.title}, assigned to ${task.assignee}${task.completed ? ', completed' : ''}`);
+          const time = document.createElement('time');
+          time.textContent = task.time;
+          const text = document.createElement('span');
+          text.textContent = `${task.title} · ${task.assignee}`;
+          event.append(time, text);
+          event.addEventListener('click', () => {
+            const row = document.querySelector(`[data-task-id="${CSS.escape(task.id)}"]`);
+            if (row) { row.scrollIntoView({behavior:'smooth', block:'center'}); row.querySelector('input[type="checkbox"]').focus(); }
+          });
+          cell.append(event);
+        });
+        if (calendarView === 'day' && dayTasks.length === 0) {
+          const empty = document.createElement('p'); empty.className = 'empty-day'; empty.textContent = 'No tasks scheduled for this day.'; cell.append(empty);
+        }
+        calendarGrid.append(cell);
+      };
+      if (calendarView === 'week' || calendarView === 'month') weekdays.forEach((_, index) => addCell(dates[index], true));
+      dates.forEach(date => addCell(date));
+    }
     function persistTask(row) {
       const id = row.dataset.taskId;
-      const config = state.tasks[id] || { awarded: false };
+      const config = state.tasks[id] || {awarded:false};
       config.completed = row.querySelector('input[type="checkbox"]').checked;
       config.points = Math.max(1, Math.min(1000, Number(row.querySelector('.task-points').value) || 1));
       config.assignee = row.querySelector('.task-assignee').value;
+      config.date = row.querySelector('.task-date').value;
+      config.time = row.querySelector('.task-time').value || '00:00';
+      config.title = row.querySelector('label').textContent;
       state.tasks[id] = config;
-      saveState();
+      saveState(); renderCalendar();
     }
-
-    document.querySelectorAll('.task[data-task-id]').forEach(row => {
+    function attachTaskEvents(row) {
       const checkbox = row.querySelector('input[type="checkbox"]');
-      const pointInput = row.querySelector('.task-points');
-      const assignee = row.querySelector('.task-assignee');
       checkbox.addEventListener('change', () => {
-        const config = state.tasks[row.dataset.taskId] || { awarded: false };
+        const config = state.tasks[row.dataset.taskId] || {awarded:false};
         if (checkbox.checked && !config.awarded) {
-          const points = Math.max(1, Math.min(1000, Number(pointInput.value) || 1));
-          const recipient = assignee.value;
+          const points = Math.max(1, Math.min(1000, Number(row.querySelector('.task-points').value) || 1));
+          const recipient = row.querySelector('.task-assignee').value;
           state.points[recipient] = (state.points[recipient] || 0) + points;
-          config.awarded = true;
-          config.awardedPoints = points;
-          config.awardedTo = recipient;
+          config.awarded = true; config.awardedPoints = points; config.awardedTo = recipient;
           document.getElementById('reward-message').textContent = `${recipient} earned ${points} star${points === 1 ? '' : 's'}!`;
         }
         state.tasks[row.dataset.taskId] = config;
-        persistTask(row);
-        renderPoints();
-        updateTaskProgress();
+        persistTask(row); renderPoints(); updateTaskProgress();
       });
-      pointInput.addEventListener('change', () => persistTask(row));
-      assignee.addEventListener('change', () => persistTask(row));
-    });
-
+      row.querySelectorAll('.task-points,.task-assignee,.task-date,.task-time').forEach(control => {
+        control.addEventListener('change', () => persistTask(row));
+      });
+    }
+    function restoreTasks() {
+      const today = localDateString(new Date());
+      document.querySelectorAll('.task[data-task-id]').forEach(row => {
+        const id = row.dataset.taskId;
+        const config = state.tasks[id] || {};
+        const dateInput = row.querySelector('.task-date');
+        dateInput.value = config.date || today;
+        row.querySelector('.task-time').value = config.time || defaultTimes[id] || '09:00';
+        if (config.completed) row.querySelector('input[type="checkbox"]').checked = true;
+        if (config.points) row.querySelector('.task-points').value = Math.max(1, Math.min(1000, Number(config.points) || 10));
+        if (members.includes(config.assignee)) row.querySelector('.task-assignee').value = config.assignee;
+        row.dataset.awarded = config.awarded ? 'true' : 'false';
+        if (!state.tasks[id]) persistTask(row);
+        attachTaskEvents(row);
+      });
+    }
     document.getElementById('redeem-form').addEventListener('submit', event => {
       event.preventDefault();
       const name = document.getElementById('redeem-member').value;
       const reward = document.getElementById('redeem-reward').value.trim();
       const cost = Number(document.getElementById('redeem-cost').value);
       const message = document.getElementById('reward-message');
-      if (!reward || !Number.isInteger(cost) || cost < 1) {
-        message.textContent = 'Enter a reward and a whole-number star cost greater than zero.';
-        return;
-      }
-      if ((state.points[name] || 0) < cost) {
-        message.textContent = `${name} needs ${cost - (state.points[name] || 0)} more star${cost - (state.points[name] || 0) === 1 ? '' : 's'} for that reward.`;
-        return;
-      }
-      state.points[name] -= cost;
-      state.history = state.history || [];
-      state.history.push({ member: name, reward, cost, date: new Date().toISOString() });
-      saveState();
-      renderPoints();
-      renderHistory();
-      message.textContent = `${name} redeemed ${cost} stars for ${reward}.`;
+      if (!reward || !Number.isInteger(cost) || cost < 1) { message.textContent = 'Enter a reward and a whole-number star cost greater than zero.'; return; }
+      if ((state.points[name] || 0) < cost) { const short = cost - (state.points[name] || 0); message.textContent = `${name} needs ${short} more star${short === 1 ? '' : 's'} for that reward.`; return; }
+      state.points[name] -= cost; state.history = state.history || [];
+      state.history.push({member:name, reward, cost, date:new Date().toISOString()});
+      saveState(); renderPoints(); renderHistory(); message.textContent = `${name} redeemed ${cost} stars for ${reward}.`;
       document.getElementById('redeem-reward').value = '';
     });
-
-    document.querySelectorAll('button[aria-pressed]').forEach(button => {
-      button.addEventListener('click', () => {
-        button.setAttribute('aria-pressed', button.getAttribute('aria-pressed') !== 'true');
-      });
-    });
-
+    document.querySelectorAll('button[aria-pressed]').forEach(button => button.addEventListener('click', () => button.setAttribute('aria-pressed', button.getAttribute('aria-pressed') !== 'true')));
     document.getElementById('add-task').addEventListener('click', () => {
       const title = window.prompt('What task would you like to add?');
       if (!title || !title.trim()) return;
       const id = `task-${Date.now()}`;
-      const row = document.createElement('div');
-      row.className = 'task';
-      row.dataset.taskId = id;
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox'; checkbox.id = id;
-      const label = document.createElement('label');
-      label.htmlFor = id; label.textContent = title.trim();
-      const pointsWrap = document.createElement('span');
-      pointsWrap.className = 'task-points-wrap';
-      const pointsInput = document.createElement('input');
-      pointsInput.className = 'task-points'; pointsInput.type = 'number';
-      pointsInput.min = '1'; pointsInput.max = '1000'; pointsInput.value = '10';
-      pointsInput.setAttribute('aria-label', `Stars for ${title.trim()}`);
-      const star = document.createElement('span'); star.textContent = '★';
-      pointsWrap.append(pointsInput, star);
-      const select = document.createElement('select');
-      select.className = 'task-assignee';
-      select.setAttribute('aria-label', `Who earns stars for ${title.trim()}`);
+      const row = document.createElement('div'); row.className = 'task'; row.dataset.taskId = id;
+      const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.id = id;
+      const label = document.createElement('label'); label.htmlFor = id; label.textContent = title.trim();
+      const pointsWrap = document.createElement('span'); pointsWrap.className = 'task-points-wrap';
+      const points = document.createElement('input'); points.className = 'task-points'; points.type = 'number'; points.min = '1'; points.max = '1000'; points.value = '10'; points.setAttribute('aria-label', `Stars for ${title.trim()}`);
+      const star = document.createElement('span'); star.textContent = '★'; pointsWrap.append(points, star);
+      const select = document.createElement('select'); select.className = 'task-assignee'; select.setAttribute('aria-label', `Who earns stars for ${title.trim()}`);
       members.forEach(name => { const option = document.createElement('option'); option.textContent = name; select.append(option); });
-      row.append(checkbox, label, pointsWrap, select);
+      const dateTime = document.createElement('span'); dateTime.className = 'task-date-time';
+      const dateInput = document.createElement('input'); dateInput.className = 'task-date'; dateInput.type = 'date'; dateInput.value = localDateString(new Date()); dateInput.setAttribute('aria-label', `Date for ${title.trim()}`);
+      const timeInput = document.createElement('input'); timeInput.className = 'task-time'; timeInput.type = 'time'; timeInput.value = '09:00'; timeInput.setAttribute('aria-label', `Time for ${title.trim()}`);
+      dateTime.append(dateInput, timeInput); row.append(checkbox, label, pointsWrap, select, dateTime);
       document.querySelector('.lists .progress').after(row);
-      checkbox.addEventListener('change', () => {
-        const config = state.tasks[id] || { awarded: false };
-        if (checkbox.checked && !config.awarded) {
-          const points = Math.max(1, Math.min(1000, Number(pointsInput.value) || 1));
-          state.points[select.value] = (state.points[select.value] || 0) + points;
-          config.awarded = true; config.awardedPoints = points; config.awardedTo = select.value;
-          document.getElementById('reward-message').textContent = `${select.value} earned ${points} star${points === 1 ? '' : 's'}!`;
-        }
-        state.tasks[id] = config; persistTask(row); renderPoints(); updateTaskProgress();
-      });
-      pointsInput.addEventListener('change', () => persistTask(row));
-      select.addEventListener('change', () => persistTask(row));
-      updateTaskProgress();
+      attachTaskEvents(row); persistTask(row); updateTaskProgress();
     });
-
     document.getElementById('edit-meal').addEventListener('click', event => {
       const meal = window.prompt('What is planned for tonight?', document.getElementById('meal-name').textContent);
       if (meal && meal.trim()) document.getElementById('meal-name').textContent = meal.trim();
       event.currentTarget.setAttribute('aria-pressed', 'true');
     });
-
-    document.querySelectorAll('nav a').forEach(link => {
-      link.addEventListener('click', () => {
-        document.querySelectorAll('nav a').forEach(item => item.classList.remove('active'));
-        link.classList.add('active');
-      });
-    });
-
-    restoreTasks();
-    renderPoints();
-    renderHistory();
-    updateClock();
-    updateTaskProgress();
+    document.querySelectorAll('[data-calendar-link]').forEach(link => link.addEventListener('click', () => { calendarView = 'day'; calendarCursor = new Date(); calendarCursor.setHours(0,0,0,0); renderCalendar(); document.getElementById('calendar').scrollIntoView({behavior:'smooth'}); }));
+    document.querySelectorAll('.view-switcher button').forEach(button => button.addEventListener('click', () => { calendarView = button.dataset.view; renderCalendar(); }));
+    document.getElementById('calendar-prev').addEventListener('click', () => { calendarCursor.setDate(calendarCursor.getDate() + (calendarView === 'day' ? -1 : calendarView === 'week' ? -7 : -1)); if (calendarView === 'month') calendarCursor.setMonth(calendarCursor.getMonth()); renderCalendar(); });
+    document.getElementById('calendar-next').addEventListener('click', () => { calendarCursor.setDate(calendarCursor.getDate() + (calendarView === 'day' ? 1 : calendarView === 'week' ? 7 : 1)); if (calendarView === 'month') calendarCursor.setMonth(calendarCursor.getMonth()); renderCalendar(); });
+    document.getElementById('calendar-today').addEventListener('click', () => { calendarCursor = new Date(); calendarCursor.setHours(0,0,0,0); renderCalendar(); });
+    document.querySelectorAll('nav a').forEach(link => link.addEventListener('click', () => {
+      document.querySelectorAll('nav a').forEach(item => item.classList.remove('active'));
+      link.classList.add('active');
+    }));
+    restoreTasks(); renderPoints(); renderHistory(); updateClock(); updateTaskProgress(); renderCalendar();
     setInterval(updateClock, 1000);
   </script>
 </body>
