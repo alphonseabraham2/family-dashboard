@@ -1,1 +1,157 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Family dashboard for members and rewards"><title>Family Dashboard</title>
+  <style>
+    :root{--bg:#eef1f6;--card:#fff;--text:#192230;--muted:#8592a5;--blue:#4f72be;--border:#e3e8f0;--shadow:0 1px 3px #1b2a4a14,0 4px 12px #1b2a4a0d;--track:#dfe5ee}
+    body.dark{--bg:#101826;--card:#1a2436;--text:#e8edf5;--muted:#8d9bb2;--border:#27344b;--shadow:0 1px 3px #0006;--track:#2b3a54}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{width:100%;max-width:1400px;margin:auto;padding:24px clamp(12px,3vw,32px) 110px;min-width:0}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+    h1{font:clamp(24px,3vw,32px) Georgia,serif;margin:0}
+    .date{color:var(--muted);font-size:13px;margin-top:6px}
+    .tools{display:flex;gap:8px;align-items:center}
+    .chip{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
+    .chip.on{background:#17243a;color:#fff;border-color:#17243a}
+    .button{background:var(--blue);color:#fff;border:0;border-radius:8px;padding:10px 14px;text-decoration:none;cursor:pointer;font-size:14px}
+
+    .board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
+    .col{display:flex;flex-direction:column;gap:10px;min-width:0}
+    .mhead{background:var(--member-bg);border:1px solid var(--border);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+    .mtop{display:flex;align-items:center;gap:10px}
+    .avatar{width:38px;height:38px;border-radius:50%;background:var(--member);color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
+    .mname{font-weight:700;font-size:16px;line-height:1.1}
+    .msub{font-size:11px;color:var(--muted);margin-top:2px}
+    .mood{margin-left:auto;font-size:20px}
+    .mstats{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;font-weight:700;flex-wrap:wrap}
+    .mstats .star{color:#d49b00}.mstats .fire{color:#e8590c}
+    .bar{flex:1;min-width:40px;height:6px;border-radius:99px;background:var(--track);overflow:hidden}
+    .bar i{display:block;height:100%;background:var(--member);width:0;transition:width .3s}
+    .ready{font-size:11px;font-weight:600;color:var(--member)}
+    .section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:10px;box-shadow:var(--shadow)}
+    .section.now{outline:2px solid color-mix(in srgb,var(--member) 45%,transparent)}
+    .shead{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin:2px 2px 8px}
+    .shead .count{margin-left:auto;letter-spacing:0;font-weight:600}
+    .now-badge{background:var(--member);color:#fff;border-radius:99px;padding:1px 7px;font-size:9px;letter-spacing:.04em}
+    .task{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:11px;padding:9px 10px;margin-bottom:7px;cursor:pointer;font:inherit}
+    .task:last-child{margin-bottom:0}
+    .task:hover{border-color:var(--member)}
+    .ticon{width:34px;height:34px;border-radius:9px;background:var(--card);display:grid;place-items:center;font-size:18px;flex:none;box-shadow:var(--shadow)}
+    .tname{font-weight:650;font-size:14px;line-height:1.15}
+    .tsub{font-size:11px;color:var(--muted);margin-top:2px}
+    .streak{margin-left:auto;font-size:12px;font-weight:700;color:#e8590c;white-space:nowrap}
+    .task.done{background:color-mix(in srgb,var(--member) 14%,var(--card));border-color:var(--member)}
+    .task.done .tname{text-decoration:line-through;opacity:.65}
+    .task.done .ticon::after{content:"✓";position:absolute;font-size:22px;color:var(--member);font-weight:800}
+    .task.done .ticon{position:relative;color:transparent;text-shadow:none}
+    .edit{font-size:12px;color:var(--muted);text-align:center;padding:4px}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:clamp(14px,2vw,20px);margin-top:18px;box-shadow:var(--shadow)}
+    .card-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.card h2{font-size:17px;margin:0}
+    .form-row{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:14px}
+    .form-row label{display:grid;gap:5px;color:var(--muted);font-size:13px}
+    .form-row input,.form-row select{padding:9px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text)}
+    .message,.history{color:var(--muted);font-size:13px}
+
+    .tabbar{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:4px;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 28px #1b2a4a30;width:min(560px,calc(100% - 20px))}
+    .tabbar a{flex:1;display:grid;justify-items:center;gap:2px;padding:7px 4px;border-radius:14px;color:var(--muted);text-decoration:none;font-size:11px;font-weight:600}
+    .tabbar a span{font-size:18px;line-height:1}
+    .tabbar a.active{background:#17243a;color:#fff}
+    .tabbar .plus{flex:none;width:46px;height:46px;border-radius:14px;background:#c8553d;color:#fff;border:0;font-size:26px;cursor:pointer}
+
+    @media(max-width:1050px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:600px){.board{grid-template-columns:minmax(0,1fr)}.form-row>*,.form-row label{width:100%}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="topbar">
+    <div><h1 id="greeting">Good morning, Arun</h1><div class="date"><time id="current-date"></time> · <time id="current-time"></time></div></div>
+    <div class="tools"><button class="chip on" type="button" aria-pressed="true">Day</button><button class="chip" id="theme" type="button" aria-label="Toggle dark mode">🌙</button></div>
+  </header>
+
+  <div class="board" id="board"></div>
+
+  <section class="card" id="redeem"><div class="card-header"><h2>Redeem stars</h2><a class="button" href="rewards.html">Manage rewards</a></div>
+    <form class="form-row" id="redeem-form"><label>Family member<select id="redeem-member"></select></label><label>Reward<input id="reward-name" placeholder="Choose a reward" required></label><label>Star cost<input id="reward-cost" type="number" min="1" value="10" required></label><button class="button">Redeem</button></form>
+    <p class="message" id="message" role="status"></p><ul class="history" id="history"></ul>
+  </section>
+</main>
+
+<nav class="tabbar" aria-label="Main navigation">
+  <a class="active" href="index.html"><span>◫</span>Today</a>
+  <a href="calendar.html"><span>▦</span>Calendar</a>
+  <a href="tasks.html"><span>✓</span>Routines</a>
+  <a href="rewards.html"><span>★</span>Rewards</a>
+  <button class="plus" type="button" aria-label="Redeem stars" onclick="document.getElementById('redeem').scrollIntoView({behavior:'smooth'})">+</button>
+</nav>
+
+<script>
+const KEY='family-dashboard-rewards-v1',RKEY='family-dashboard-routines-v1',GOAL=10,
+MEMBERS=[{name:'Arun',color:'#4f72be',status:'Parent',mood:'🙂'},{name:'Jaisy',color:'#d55f91',status:'Parent',mood:'😊'},{name:'Joanna',color:'#2f9d72',status:'Home',mood:'😄'},{name:'Joshua',color:'#d97706',status:'School',mood:'😎'}],
+byName=Object.fromEntries(MEMBERS.map(m=>[m.name,m])),
+// [name, icon, subtitle]
+KID={Morning:[['Brush Teeth','🪥'],['Make Bed','🛏️'],['Get Dressed','👕']],Afternoon:[['Homework','📓','tap to log min'],['Piano','🎹','tap to log min'],['Chinese','🀄','tap to log min'],['Soccer','⚽','tap to log min']],Evening:[['Reading','📖','tap for your book'],['Journaling','✏️'],['Shower','🚿'],['Brush Teeth','🪥']],Jobs:[['Feed the Dog','🐶','Any day']]},
+ROUTINES={
+ Arun:{Morning:[['Brush Teeth','🪥'],['Make Bed','🛏️']],Afternoon:[['Exercise','🏃','tap to log min']],Evening:[['Reading','📖','tap for your book'],['Shower','🚿'],['Brush Teeth','🪥']],Jobs:[]},
+ Jaisy:{Morning:[['Brush Teeth','🪥'],['Make Bed','🛏️']],Afternoon:[['Exercise','🧘','tap to log min']],Evening:[['Reading','📖','tap for your book'],['Journaling','✏️'],['Shower','🚿'],['Brush Teeth','🪥']],Jobs:[]},
+ Joanna:KID,
+ Joshua:{...KID,Morning:KID.Morning.slice(0,2),Jobs:[]}
+},
+SECTIONS=['Morning','Afternoon','Evening','Jobs'];
+
+const pad=n=>String(n).padStart(2,'0'),ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,today=()=>ymd(new Date());
+function read(){try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.points&&s.tasks)return s}catch(e){console.warn(e)}return{points:Object.fromEntries(MEMBERS.map(m=>[m.name,0])),tasks:{},history:[]}}
+const state=read();MEMBERS.forEach(m=>state.points[m.name]=Math.max(0,Number(state.points[m.name])||0));
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){console.warn(e)}}
+let log={};try{log=JSON.parse(localStorage.getItem(RKEY)||'{}')||{}}catch(e){console.warn(e)}
+function saveLog(){try{localStorage.setItem(RKEY,JSON.stringify(log))}catch(e){console.warn(e)}}
+
+const tid=(m,s,n)=>`${m}|${s}|${n}`,dates=id=>log[id]||(log[id]=[]);
+function streak(id){const set=new Set(log[id]||[]);const d=new Date();if(!set.has(ymd(d)))d.setDate(d.getDate()-1);let n=0;while(set.has(ymd(d))){n++;d.setDate(d.getDate()-1)}return n}
+const memberStyle=n=>{const p=byName[n];return `--member:${p.color};--member-bg:${p.color}18`};
+const hour=()=>new Date().getHours(),nowSection=()=>hour()<12?'Morning':hour()<17?'Afternoon':'Evening';
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+
+function toggle(m,id){const d=dates(id),t=today(),i=d.indexOf(t);
+  if(i>=0){d.splice(i,1);state.points[m]=Math.max(0,state.points[m]-1)}else{d.push(t);state.points[m]=(state.points[m]||0)+1}
+  save();saveLog();renderBoard()}
+
+function renderBoard(){const board=document.getElementById('board'),t=today();board.replaceChildren();
+  MEMBERS.forEach(m=>{const col=el('div','col');col.style.cssText=memberStyle(m.name);
+    const tasks=SECTIONS.flatMap(s=>ROUTINES[m.name][s].map(x=>tid(m.name,s,x[0]))),done=tasks.filter(id=>(log[id]||[]).includes(t)).length;
+    const best=Math.max(0,...tasks.map(streak)),pts=state.points[m.name]||0;
+    const head=el('div','mhead',`<div class="mtop"><div class="avatar">${m.name[0]}</div><div><div class="mname">${m.name}</div><div class="msub">${done}/${tasks.length} done today · ${m.status}</div></div><span class="mood">${m.mood}</span></div>
+      <div class="mstats"><span class="star">★ ${pts}</span><span class="fire">🔥 ${best}</span><div class="bar"><i style="width:${tasks.length?done/tasks.length*100:0}%"></i></div><span class="ready">${pts>=GOAL?'ready!':(GOAL-pts)+' to go'}</span></div>`);
+    col.append(head);
+    SECTIONS.forEach(s=>{const items=ROUTINES[m.name][s];if(!items.length)return;
+      const ids=items.map(x=>tid(m.name,s,x[0])),sd=ids.filter(id=>(log[id]||[]).includes(t)).length;
+      const sec=el('div','section'+(s===nowSection()?' now':''));
+      sec.append(el('div','shead',`${s}${s===nowSection()?'<span class="now-badge">NOW</span>':''}<span class="count">${sd}/${items.length}</span>`));
+      items.forEach((x,i)=>{const id=ids[i],isDone=(log[id]||[]).includes(t),k=streak(id);
+        const b=el('button','task'+(isDone?' done':''),`<span class="ticon">${x[1]}</span><span><div class="tname">${x[0]}</div>${x[2]?`<div class="tsub">${x[2]}</div>`:''}</span>${k?`<span class="streak">🔥${k}</span>`:''}`);
+        b.type='button';b.setAttribute('aria-pressed',isDone);b.onclick=()=>toggle(m.name,id);sec.append(b)});
+      col.append(sec)});
+    col.append(el('div','edit',`⚙ Edit ${m.name}'s routine`));
+    board.append(col)});
+  renderHistory()}
+
+function renderHistory(){const ul=document.getElementById('history');ul.replaceChildren();(state.history||[]).slice(-5).reverse().forEach(x=>{const li=document.createElement('li');li.textContent=`${x.member} redeemed ${x.reward} for ${x.cost} stars`;ul.append(li)})}
+function clock(){const d=new Date();document.getElementById('current-date').textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});document.getElementById('current-time').textContent=d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+  const h=d.getHours();document.getElementById('greeting').textContent=`Good ${h<12?'morning':h<17?'afternoon':'evening'}, Arun`}
+
+const select=document.getElementById('redeem-member');MEMBERS.forEach(m=>{const o=document.createElement('option');o.value=m.name;o.textContent=m.name;select.append(o)});
+document.getElementById('redeem-form').onsubmit=e=>{e.preventDefault();const n=select.value,reward=document.getElementById('reward-name').value.trim(),cost=Number(document.getElementById('reward-cost').value);if(!reward||cost<1)return;
+  if((state.points[n]||0)<cost){document.getElementById('message').textContent=`${n} needs ${cost-state.points[n]} more stars`;return}
+  state.points[n]-=cost;state.history=state.history||[];state.history.push({member:n,reward,cost});save();renderBoard();document.getElementById('reward-name').value='';document.getElementById('message').textContent=`${n} redeemed ${reward}`};
+
+const themeBtn=document.getElementById('theme');
+try{if(localStorage.getItem('family-dashboard-theme')==='dark')document.body.classList.add('dark')}catch(e){}
+themeBtn.onclick=()=>{const d=document.body.classList.toggle('dark');try{localStorage.setItem('family-dashboard-theme',d?'dark':'light')}catch(e){}};
+
+renderBoard();clock();setInterval(clock,1000);
+</script>
+</body>
+</html>
