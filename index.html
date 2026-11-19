@@ -29,14 +29,18 @@
     h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 32px; letter-spacing: -.5px; }
     .date { color: var(--muted); margin-top: 7px; font-size: 14px; }
     .top-actions { display: flex; gap: 10px; }
-    .icon-button, .primary-button { border: 0; border-radius: 10px; height: 42px; cursor: pointer; font-weight: 700; }
+    button { font: inherit; }
+    .icon-button, .primary-button { border: 0; border-radius: 10px; height: 42px; cursor: pointer; font-weight: 700; transition: background .15s, box-shadow .15s, transform .15s; }
     .icon-button { width: 42px; background: #fff; color: var(--text); border: 1px solid var(--border); }
     .primary-button { background: var(--blue); color: #fff; padding: 0 17px; }
+    .icon-button[aria-pressed="true"], .primary-button[aria-pressed="true"] { box-shadow: 0 0 0 3px rgba(79,114,190,.25); transform: translateY(1px); }
     .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: 0 6px 18px rgba(40,55,80,.025); }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .card h2 { margin: 0; font-size: 16px; }
-    .link { border: 0; background: none; color: var(--blue); font-weight: 700; cursor: pointer; }
+    .link { border: 0; background: none; color: var(--blue); font-weight: 700; cursor: pointer; border-radius: 5px; padding: 5px 7px; }
+    .link[aria-pressed="true"] { background: var(--blue-soft, #edf3ff); }
+    button:focus-visible, input:focus-visible, nav a:focus-visible { outline: 3px solid #94b5ff; outline-offset: 2px; }
     .schedule { grid-column: span 8; } .members { grid-column: span 4; }
     .lists { grid-column: span 7; } .meal { grid-column: span 5; }
     .schedule-row { display: grid; grid-template-columns: 76px 1fr auto; align-items: center; min-height: 58px; border-top: 1px solid var(--border); }
@@ -50,11 +54,10 @@
     .member strong { display: block; font-size: 14px; } .member small { color: var(--muted); }
     .status { margin-left: auto; color: var(--green); font-size: 12px; }
     .progress { height: 7px; background: var(--border); border-radius: 20px; overflow: hidden; margin: 14px 0 18px; }
-    .progress div { width: 68%; height: 100%; background: var(--green); border-radius: 20px; }
+    .progress div { width: 0; height: 100%; background: var(--green); border-radius: 20px; transition: width .2s; }
     .task { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 14px; }
-    .check { width: 19px; height: 19px; border: 1.5px solid #ccd5e2; border-radius: 5px; }
+    .task input { width: 19px; height: 19px; margin: 0; accent-color: var(--green); cursor: pointer; }
     .task.done { color: var(--muted); text-decoration: line-through; }
-    .task.done .check { background: var(--green); border-color: var(--green); }
     .meal-box { min-height: 170px; border-radius: 12px; background: linear-gradient(135deg, #dfe8db, #f1e7c9); padding: 18px; display: flex; flex-direction: column; justify-content: flex-end; }
     .meal-box strong { font-family: Georgia, serif; font-size: 20px; }
     .meal-box span { margin-top: 5px; color: #64705f; font-size: 13px; }
@@ -80,50 +83,50 @@
     <aside class="sidebar">
       <div class="brand"><div class="brand-mark">⌂</div><span>Family</span></div>
       <nav aria-label="Main navigation">
-        <a class="active" href="#"><span class="nav-icon">◫</span><span class="label">Dashboard</span></a>
-        <a href="#"><span class="nav-icon">▦</span><span class="label">Calendar</span></a>
-        <a href="#"><span class="nav-icon">✓</span><span class="label">Tasks</span></a>
-        <a href="#"><span class="nav-icon">☷</span><span class="label">Lists</span></a>
+        <a class="active" href="#dashboard"><span class="nav-icon">◫</span><span class="label">Dashboard</span></a>
+        <a href="#calendar"><span class="nav-icon">▦</span><span class="label">Calendar</span></a>
+        <a href="#tasks"><span class="nav-icon">✓</span><span class="label">Tasks</span></a>
+        <a href="#lists"><span class="nav-icon">☷</span><span class="label">Lists</span></a>
       </nav>
       <div class="profile"><div class="avatar">AA</div><div><strong>Alex</strong><small>Parent</small></div></div>
     </aside>
-    <main>
+    <main id="dashboard">
       <header class="topbar">
         <div>
           <h1>Good morning, Alex</h1>
           <div class="date"><time id="current-date"></time><span aria-hidden="true"> · </span><time id="current-time" aria-label="Current local time"></time></div>
         </div>
         <div class="top-actions">
-          <button class="icon-button" aria-label="Notifications">♢</button>
-          <button class="primary-button">+ Add new</button>
+          <button class="icon-button" type="button" aria-label="Notifications" aria-pressed="false">♢</button>
+          <button class="primary-button" id="add-task" type="button">+ Add new</button>
         </div>
       </header>
       <section class="grid">
-        <article class="card schedule">
-          <div class="card-header"><h2>Today's Schedule</h2><button class="link">View calendar</button></div>
+        <article class="card schedule" id="calendar">
+          <div class="card-header"><h2>Today's Schedule</h2><button class="link" type="button" aria-pressed="false">View calendar</button></div>
           <div class="schedule-row"><div class="time">8:30 AM</div><div class="event"><span class="event-dot" style="background:var(--orange)"></span>School drop-off</div><span class="tag">Everyone</span></div>
           <div class="schedule-row"><div class="time">10:00 AM</div><div class="event"><span class="event-dot" style="background:var(--blue)"></span>Team meeting</div><span class="tag">Alex</span></div>
           <div class="schedule-row"><div class="time">3:30 PM</div><div class="event"><span class="event-dot" style="background:var(--purple)"></span>Soccer practice</div><span class="tag">Sam</span></div>
           <div class="schedule-row"><div class="time">6:00 PM</div><div class="event"><span class="event-dot" style="background:var(--green)"></span>Dinner with family</div><span class="tag">Everyone</span></div>
         </article>
         <article class="card members">
-          <div class="card-header"><h2>Family</h2><button class="link">Manage</button></div>
+          <div class="card-header"><h2>Family</h2><button class="link" type="button" aria-pressed="false">Manage</button></div>
           <div class="member"><div class="member-avatar" style="background:#e0a27f">AA</div><div><strong>Alex</strong><small>Parent</small></div><span class="status">● Home</span></div>
           <div class="member"><div class="member-avatar" style="background:#7593bd">JM</div><div><strong>Jamie</strong><small>Parent</small></div><span class="status">● Home</span></div>
           <div class="member"><div class="member-avatar" style="background:#88b39d">SM</div><div><strong>Sam</strong><small>Child</small></div><span class="status" style="color:var(--orange)">● School</span></div>
           <div class="member"><div class="member-avatar" style="background:#aa91c2">MJ</div><div><strong>Mia</strong><small>Child</small></div><span class="status" style="color:var(--orange)">● School</span></div>
         </article>
-        <article class="card lists">
-          <div class="card-header"><h2>Weekly Tasks</h2><button class="link">View all</button></div>
-          <div class="progress"><div></div></div>
-          <div class="task done"><span class="check"></span>Clean the kitchen</div>
-          <div class="task"><span class="check"></span>Order groceries</div>
-          <div class="task"><span class="check"></span>Water the plants</div>
-          <div class="task"><span class="check"></span>Schedule dentist appointment</div>
+        <article class="card lists" id="tasks">
+          <div class="card-header" id="lists"><h2>Weekly Tasks</h2><button class="link" type="button" aria-pressed="false">View all</button></div>
+          <div class="progress" role="progressbar" aria-label="Tasks completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div></div></div>
+          <div class="task"><input type="checkbox" id="task-kitchen" checked><label for="task-kitchen">Clean the kitchen</label></div>
+          <div class="task"><input type="checkbox" id="task-groceries"><label for="task-groceries">Order groceries</label></div>
+          <div class="task"><input type="checkbox" id="task-plants"><label for="task-plants">Water the plants</label></div>
+          <div class="task"><input type="checkbox" id="task-dentist"><label for="task-dentist">Schedule dentist appointment</label></div>
         </article>
         <article class="card meal">
-          <div class="card-header"><h2>Tonight's Meal</h2><button class="link">Edit</button></div>
-          <div class="meal-box"><strong>Roasted salmon</strong><span>With vegetables &amp; rice</span></div>
+          <div class="card-header"><h2>Tonight's Meal</h2><button class="link" id="edit-meal" type="button" aria-pressed="false">Edit</button></div>
+          <div class="meal-box"><strong id="meal-name">Roasted salmon</strong><span>With vegetables &amp; rice</span></div>
         </article>
       </section>
     </main>
@@ -144,7 +147,59 @@
       }).format(now);
     }
 
+    function updateTaskProgress() {
+      const tasks = [...document.querySelectorAll('.task input[type="checkbox"]')];
+      const completed = tasks.filter(task => task.checked).length;
+      const percent = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
+      document.querySelector('.progress div').style.width = `${percent}%`;
+      const progress = document.querySelector('.progress');
+      progress.setAttribute('aria-valuenow', percent);
+      tasks.forEach(task => task.closest('.task').classList.toggle('done', task.checked));
+    }
+
+    document.querySelectorAll('.task input[type="checkbox"]').forEach(checkbox => {
+      checkbox.addEventListener('change', updateTaskProgress);
+    });
+
+    document.querySelectorAll('button:not(#add-task):not(#edit-meal)').forEach(button => {
+      button.addEventListener('click', () => {
+        button.setAttribute('aria-pressed', button.getAttribute('aria-pressed') !== 'true');
+      });
+    });
+
+    document.getElementById('add-task').addEventListener('click', () => {
+      const title = window.prompt('What task would you like to add?');
+      if (!title || !title.trim()) return;
+      const id = `task-${Date.now()}`;
+      const row = document.createElement('div');
+      row.className = 'task';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = id;
+      const label = document.createElement('label');
+      label.htmlFor = id;
+      label.textContent = title.trim();
+      row.append(checkbox, label);
+      document.querySelector('.lists .progress').after(row);
+      checkbox.addEventListener('change', updateTaskProgress);
+      updateTaskProgress();
+    });
+
+    document.getElementById('edit-meal').addEventListener('click', event => {
+      const meal = window.prompt('What is planned for tonight?', document.getElementById('meal-name').textContent);
+      if (meal && meal.trim()) document.getElementById('meal-name').textContent = meal.trim();
+      event.currentTarget.setAttribute('aria-pressed', 'true');
+    });
+
+    document.querySelectorAll('nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelectorAll('nav a').forEach(item => item.classList.remove('active'));
+        link.classList.add('active');
+      });
+    });
+
     updateClock();
+    updateTaskProgress();
     setInterval(updateClock, 1000);
   </script>
 </body>
