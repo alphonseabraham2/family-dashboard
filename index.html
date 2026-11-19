@@ -39,7 +39,7 @@
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .card h2 { margin: 0; font-size: 16px; }
     .link { border: 0; background: none; color: var(--blue); font-weight: 700; cursor: pointer; border-radius: 5px; padding: 5px 7px; }
-    .link[aria-pressed="true"] { background: var(--blue-soft, #edf3ff); }
+    .link[aria-pressed="true"] { background: #edf3ff; }
     button:focus-visible, input:focus-visible, nav a:focus-visible { outline: 3px solid #94b5ff; outline-offset: 2px; }
     .schedule { grid-column: span 8; } .members { grid-column: span 4; }
     .lists { grid-column: span 7; } .meal { grid-column: span 5; }
@@ -88,12 +88,12 @@
         <a href="#tasks"><span class="nav-icon">✓</span><span class="label">Tasks</span></a>
         <a href="#lists"><span class="nav-icon">☷</span><span class="label">Lists</span></a>
       </nav>
-      <div class="profile"><div class="avatar">AA</div><div><strong>Alex</strong><small>Parent</small></div></div>
+      <div class="profile"><div class="avatar">AA</div><div><strong>Arun</strong><small>Parent</small></div></div>
     </aside>
     <main id="dashboard">
       <header class="topbar">
         <div>
-          <h1>Good morning, Alex</h1>
+          <h1>Good morning, Arun</h1>
           <div class="date"><time id="current-date"></time><span aria-hidden="true"> · </span><time id="current-time" aria-label="Current local time"></time></div>
         </div>
         <div class="top-actions">
@@ -105,16 +105,16 @@
         <article class="card schedule" id="calendar">
           <div class="card-header"><h2>Today's Schedule</h2><button class="link" type="button" aria-pressed="false">View calendar</button></div>
           <div class="schedule-row"><div class="time">8:30 AM</div><div class="event"><span class="event-dot" style="background:var(--orange)"></span>School drop-off</div><span class="tag">Everyone</span></div>
-          <div class="schedule-row"><div class="time">10:00 AM</div><div class="event"><span class="event-dot" style="background:var(--blue)"></span>Team meeting</div><span class="tag">Alex</span></div>
-          <div class="schedule-row"><div class="time">3:30 PM</div><div class="event"><span class="event-dot" style="background:var(--purple)"></span>Soccer practice</div><span class="tag">Sam</span></div>
+          <div class="schedule-row"><div class="time">10:00 AM</div><div class="event"><span class="event-dot" style="background:var(--blue)"></span>Team meeting</div><span class="tag">Arun</span></div>
+          <div class="schedule-row"><div class="time">3:30 PM</div><div class="event"><span class="event-dot" style="background:var(--purple)"></span>Soccer practice</div><span class="tag">Joshua</span></div>
           <div class="schedule-row"><div class="time">6:00 PM</div><div class="event"><span class="event-dot" style="background:var(--green)"></span>Dinner with family</div><span class="tag">Everyone</span></div>
         </article>
         <article class="card members">
           <div class="card-header"><h2>Family</h2><button class="link" type="button" aria-pressed="false">Manage</button></div>
-          <div class="member"><div class="member-avatar" style="background:#e0a27f">AA</div><div><strong>Alex</strong><small>Parent</small></div><span class="status">● Home</span></div>
-          <div class="member"><div class="member-avatar" style="background:#7593bd">JM</div><div><strong>Jamie</strong><small>Parent</small></div><span class="status">● Home</span></div>
-          <div class="member"><div class="member-avatar" style="background:#88b39d">SM</div><div><strong>Sam</strong><small>Child</small></div><span class="status" style="color:var(--orange)">● School</span></div>
-          <div class="member"><div class="member-avatar" style="background:#aa91c2">MJ</div><div><strong>Mia</strong><small>Child</small></div><span class="status" style="color:var(--orange)">● School</span></div>
+          <div class="member"><div class="member-avatar" style="background:#e0a27f">A</div><div><strong>Arun</strong><small>Parent</small></div><span class="status">● Home</span></div>
+          <div class="member"><div class="member-avatar" style="background:#7593bd">J</div><div><strong>Jaisy</strong><small>Parent</small></div><span class="status">● Home</span></div>
+          <div class="member"><div class="member-avatar" style="background:#88b39d">Jo</div><div><strong>Joanna</strong><small>Child</small></div><span class="status" style="color:var(--orange)">● School</span></div>
+          <div class="member"><div class="member-avatar" style="background:#aa91c2">J</div><div><strong>Joshua</strong><small>Child</small></div><span class="status" style="color:var(--orange)">● School</span></div>
         </article>
         <article class="card lists" id="tasks">
           <div class="card-header" id="lists"><h2>Weekly Tasks</h2><button class="link" type="button" aria-pressed="false">View all</button></div>
@@ -152,8 +152,7 @@
       const completed = tasks.filter(task => task.checked).length;
       const percent = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
       document.querySelector('.progress div').style.width = `${percent}%`;
-      const progress = document.querySelector('.progress');
-      progress.setAttribute('aria-valuenow', percent);
+      document.querySelector('.progress').setAttribute('aria-valuenow', percent);
       tasks.forEach(task => task.closest('.task').classList.toggle('done', task.checked));
     }
 
@@ -174,11 +173,9 @@
       const row = document.createElement('div');
       row.className = 'task';
       const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.id = id;
+      checkbox.type = 'checkbox'; checkbox.id = id;
       const label = document.createElement('label');
-      label.htmlFor = id;
-      label.textContent = title.trim();
+      label.htmlFor = id; label.textContent = title.trim();
       row.append(checkbox, label);
       document.querySelector('.lists .progress').after(row);
       checkbox.addEventListener('change', updateTaskProgress);
