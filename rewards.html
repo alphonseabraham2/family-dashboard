@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Manage family rewards and redeem stars">
+  <title>Family Rewards</title>
+  <style>
+    :root{--bg:#f3f6fb;--card:#fff;--text:#192230;--muted:#738195;--navy:#17243a;--border:#e5eaf2;--blue:#4f72be}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{min-height:100vh;display:grid;grid-template-columns:220px 1fr}.sidebar{background:var(--navy);color:#fff;padding:28px 18px;display:flex;flex-direction:column}.brand{font-weight:800;padding:0 10px 28px}.brand-mark{display:inline-grid;place-items:center;margin-right:8px;width:34px;height:34px;border-radius:50%;background:#fff;color:var(--navy)}nav{display:grid;gap:6px}nav a{padding:12px 14px;border-radius:10px;color:#b9c4d4;text-decoration:none}nav a.active,nav a:hover{background:#ffffff1a;color:#fff}.profile{margin-top:auto;border-top:1px solid #ffffff20;padding:16px 8px 0}.profile small{display:block;color:#9facbf;margin-top:3px}main{width:100%;max-width:1200px;margin:auto;padding:34px 38px 48px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}h1{font:32px Georgia,serif;margin:0}h2{font-size:18px;margin:0}.subtitle,.muted{color:var(--muted);font-size:14px;margin-top:7px}.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 6px 18px #28375008}.button{border:0;border-radius:8px;padding:9px 14px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer;text-decoration:none}.button.secondary{background:#edf3ff;color:var(--blue)}.toolbar,.form-row{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.toolbar{justify-content:space-between;align-items:center;margin-bottom:14px}.form-row label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--muted)}input,select{min-width:0;border:1px solid var(--border);border-radius:7px;padding:9px;background:#fff;color:var(--text);font:inherit}.name-input{min-width:190px}.star-input{width:100px}.person-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.person-tab{border:1px solid var(--member);border-radius:20px;padding:7px 12px;background:#fff;color:var(--member);cursor:pointer;font:inherit;font-weight:700}.person-tab.active{background:var(--member);color:#fff}.reward-list{display:grid;gap:10px}.reward{display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-left:4px solid var(--member);border-radius:10px;padding:12px;background:linear-gradient(110deg,var(--member-bg),#fff 70%)}.reward-name{flex:1;font-weight:700}.cost{white-space:nowrap;color:var(--member);font-weight:800}.actions{display:flex;gap:6px}.icon-button{border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--text);padding:7px 9px;cursor:pointer}.icon-button.redeem{border-color:var(--member);background:var(--member);color:#fff;font-weight:700}.icon-button:disabled{opacity:.45;cursor:not-allowed}.empty{padding:18px 4px;color:var(--muted)}.message{min-height:22px;color:var(--muted);font-size:14px;margin:10px 0}.history{font-size:14px;color:var(--muted);padding-left:20px}.history li{margin:6px 0}.hidden{display:none!important}@media(max-width:850px){.app{grid-template-columns:74px 1fr}.brand span,.profile div{display:none}.brand{text-align:center;padding-inline:0}nav a{text-align:center;font-size:0}.profile{text-align:center}}@media(max-width:620px){.app{display:block}.sidebar{position:fixed;z-index:2;bottom:0;left:0;right:0;height:65px;padding:7px;display:block}.brand,.profile{display:none}nav{grid-template-columns:repeat(4,1fr)}nav a{padding:12px 4px;height:50px;text-align:center}main{padding:24px 12px 82px}.card{padding:15px}.topbar h1{font-size:27px}.reward{flex-wrap:wrap}.reward-name{min-width:calc(100% - 85px)}.actions{margin-left:auto}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">⌂</span><span>Family</span></div>
+      <nav aria-label="Main navigation"><a href="index.html">◫ &nbsp; Dashboard</a><a href="calendar.html">▦ &nbsp; Calendar</a><a href="index.html#tasks">✓ &nbsp; Tasks</a><a class="active" href="rewards.html">★ &nbsp; Rewards</a></nav>
+      <div class="profile"><strong>Family</strong><small>Reward store</small></div>
+    </aside>
+    <main>
+      <header class="topbar"><div><h1>Family Rewards</h1><div class="subtitle">Create rewards for each person and redeem them with stars.</div></div><a class="button secondary" href="index.html">Back to dashboard</a></header>
+      <section class="card">
+        <div class="toolbar"><div><h2>Reward lists</h2><div class="muted">Each person's rewards and star costs are managed separately.</div></div></div>
+        <div class="person-tabs" id="person-tabs" role="tablist" aria-label="Choose a family member"></div>
+        <form class="form-row" id="reward-form">
+          <label>Reward name<input class="name-input" id="reward-name" maxlength="80" placeholder="e.g. Choose a family movie" required></label>
+          <label>Star cost<input class="star-input" id="reward-stars" type="number" min="1" max="100000" value="10" required></label>
+          <button class="button" id="save-button" type="submit">Add reward</button>
+          <button class="button secondary hidden" id="cancel-edit" type="button">Cancel edit</button>
+        </form>
+        <p class="message" id="message" role="status" aria-live="polite"></p>
+        <div class="reward-list" id="reward-list"></div>
+      </section>
+      <section class="card"><h2>Recent redemptions</h2><ul class="history" id="history"></ul></section>
+    </main>
+  </div>
+<script>
+const KEY='family-dashboard-rewards-v1';
+const MEMBERS=[
+  {name:'Arun',color:'#4f72be'},
+  {name:'Jaisy',color:'#d55f91'},
+  {name:'Joanna',color:'#2f9d72'},
+  {name:'Joshua',color:'#d97706'}
+];
+let selectedPerson=MEMBERS[0].name;
+let editingRewardId=null;
+function readState(){try{const saved=JSON.parse(localStorage.getItem(KEY)||'{}');return saved&&typeof saved==='object'?saved:{}}catch(error){console.warn('Could not read dashboard data',error);return {}}}
+let state=readState();
+function ensureState(){if(!state.points||typeof state.points!=='object')state.points={};MEMBERS.forEach(person=>{state.points[person.name]=Math.max(0,Number(state.points[person.name])||0)});if(!state.tasks||typeof state.tasks!=='object')state.tasks={};if(!state.rewards||typeof state.rewards!=='object')state.rewards={};MEMBERS.forEach(person=>{if(!Array.isArray(state.rewards[person.name]))state.rewards[person.name]=[]});if(!Array.isArray(state.history))state.history=[]}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));window.dispatchEvent(new Event('rewards-updated'))}catch(error){console.error('Could not save dashboard data',error);showMessage('Could not save changes in this browser.')}}
+function currentMember(){return MEMBERS.find(person=>person.name===selectedPerson)||MEMBERS[0]}
+function styleFor(person){return `--member:${person.color};--member-bg:${person.color}18`}
+function showMessage(text){document.getElementById('message').textContent=text}
+function renderTabs(){const tabs=document.getElementById('person-tabs');tabs.replaceChildren();MEMBERS.forEach(person=>{const button=document.createElement('button');button.type='button';button.className=`person-tab${person.name===selectedPerson?' active':''}`;button.style.cssText=styleFor(person);button.textContent=`${person.name} · ★ ${state.points[person.name]||0}`;button.setAttribute('role','tab');button.setAttribute('aria-selected',String(person.name===selectedPerson));button.addEventListener('click',()=>{selectedPerson=person.name;cancelEdit();showMessage('');render()});tabs.append(button)})}
+function renderRewards(){const list=document.getElementById('reward-list');list.replaceChildren();const person=currentMember();const rewards=state.rewards[person.name]||[];if(!rewards.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=`No rewards for ${person.name} yet. Add one above.`;list.append(empty);return}rewards.forEach(reward=>{const row=document.createElement('div');row.className='reward';row.style.cssText=styleFor(person);const name=document.createElement('div');name.className='reward-name';name.textContent=reward.name;const cost=document.createElement('div');cost.className='cost';cost.textContent=`★ ${reward.stars} stars`;const actions=document.createElement('div');actions.className='actions';const redeem=document.createElement('button');redeem.type='button';redeem.className='icon-button redeem';redeem.textContent='Redeem';redeem.disabled=(state.points[person.name]||0)<reward.stars;redeem.setAttribute('aria-label',`Redeem ${reward.name} for ${person.name}`);redeem.addEventListener('click',()=>redeemReward(person.name,reward.id));const edit=document.createElement('button');edit.type='button';edit.className='icon-button';edit.textContent='Edit';edit.addEventListener('click',()=>startEdit(reward));const remove=document.createElement('button');remove.type='button';remove.className='icon-button';remove.textContent='Delete';remove.setAttribute('aria-label',`Delete ${reward.name}`);remove.addEventListener('click',()=>deleteReward(person.name,reward.id));actions.append(redeem,edit,remove);row.append(name,cost,actions);list.append(row)})}
+function renderHistory(){const list=document.getElementById('history');list.replaceChildren();const entries=state.history.slice(-10).reverse();if(!entries.length){const empty=document.createElement('li');empty.textContent='No rewards redeemed yet.';list.append(empty);return}entries.forEach(entry=>{const li=document.createElement('li');const when=entry.date?new Date(entry.date).toLocaleDateString():'';li.textContent=`${entry.member} redeemed “${entry.reward}” for ${entry.cost} stars${when?` · ${when}`:''}`;list.append(li)})}
+function render(){ensureState();renderTabs();renderRewards();renderHistory()}
+function resetForm(){document.getElementById('reward-form').reset();document.getElementById('reward-stars').value='10';editingRewardId=null;document.getElementById('save-button').textContent='Add reward';document.getElementById('cancel-edit').classList.add('hidden')}
+function cancelEdit(){resetForm()}
+function startEdit(reward){editingRewardId=reward.id;document.getElementById('reward-name').value=reward.name;document.getElementById('reward-stars').value=reward.stars;document.getElementById('save-button').textContent='Save changes';document.getElementById('cancel-edit').classList.remove('hidden');document.getElementById('reward-name').focus()}
+function deleteReward(personName,rewardId){const reward=(state.rewards[personName]||[]).find(item=>item.id===rewardId);if(!reward||!confirm(`Delete “${reward.name}” from ${personName}'s rewards?`))return;state.rewards[personName]=state.rewards[personName].filter(item=>item.id!==rewardId);if(editingRewardId===rewardId)resetForm();save();showMessage(`Deleted ${reward.name} from ${personName}'s list.`);render()}
+function redeemReward(personName,rewardId){const reward=(state.rewards[personName]||[]).find(item=>item.id===rewardId);if(!reward)return;const balance=Number(state.points[personName])||0;if(balance<reward.stars){showMessage(`${personName} needs ${reward.stars-balance} more stars for ${reward.name}.`);return}state.points[personName]=balance-reward.stars;state.history.push({member:personName,reward:reward.name,cost:reward.stars,date:new Date().toISOString()});save();showMessage(`${personName} redeemed ${reward.name} for ${reward.stars} stars.`);render()}
+document.getElementById('reward-form').addEventListener('submit',event=>{event.preventDefault();const name=document.getElementById('reward-name').value.trim();const stars=Number(document.getElementById('reward-stars').value);if(!name||!Number.isInteger(stars)||stars<1||stars>100000){showMessage('Enter a reward name and a whole-number star cost of at least 1.');return}const rewards=state.rewards[selectedPerson];if(editingRewardId){const reward=rewards.find(item=>item.id===editingRewardId);if(!reward)return;reward.name=name;reward.stars=stars;showMessage(`Updated ${name} for ${selectedPerson}.`)}else{rewards.push({id:`reward-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,stars});showMessage(`Added ${name} to ${selectedPerson}'s rewards.`)}save();resetForm();render()});
+document.getElementById('cancel-edit').addEventListener('click',cancelEdit);
+window.addEventListener('storage',event=>{if(event.key===KEY){state=readState();render()}});
+window.addEventListener('focus',()=>{state=readState();render()});
+render();
+</script>
+</body>
+</html>
