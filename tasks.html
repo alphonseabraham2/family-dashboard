@@ -46,7 +46,7 @@
     .form-actions{grid-column:1/-1;display:flex;gap:8px}
     .hidden{display:none!important}
     .message{min-height:20px;color:var(--muted);font-size:13px;margin:10px 0 0}
-    .tabbar{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:4px;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 28px #1b2a4a30;width:min(560px,calc(100% - 20px))}
+    .tabbar{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:4px;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 28px #1b2a4a30;width:min(600px,calc(100% - 20px))}
     .tabbar a{flex:1;display:grid;justify-items:center;gap:2px;padding:7px 4px;border-radius:14px;color:var(--muted);text-decoration:none;font-size:11px;font-weight:600}
     .tabbar a span{font-size:18px;line-height:1}
     .tabbar a.active{background:#17243a;color:#fff}
@@ -87,6 +87,7 @@
   <a href="index.html"><span>◫</span>Today</a>
   <a href="calendar.html"><span>▦</span>Calendar</a>
   <a class="active" href="tasks.html"><span>✓</span>Routines</a>
+  <a href="recipes.html"><span>🍽</span>Meals</a>
   <a href="rewards.html"><span>★</span>Rewards</a>
   <button class="plus" type="button" aria-label="Add task" onclick="openForm()">+</button>
 </nav>

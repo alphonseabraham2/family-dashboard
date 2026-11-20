@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Family recipes and weekly meal plan">
+  <title>Family Meals</title>
+  <style>
+    :root{--bg:#eef1f6;--card:#fff;--text:#192230;--muted:#8592a5;--blue:#4f72be;--border:#e3e8f0;--shadow:0 1px 3px #1b2a4a14,0 4px 12px #1b2a4a0d;--track:#dfe5ee;--ink:#17243a;--accent:#c8553d}
+    body.dark{--bg:#101826;--card:#1a2436;--text:#e8edf5;--muted:#8d9bb2;--border:#27344b;--shadow:0 1px 3px #0006;--track:#2b3a54;--ink:#e8edf5}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{width:100%;max-width:1000px;margin:auto;padding:24px clamp(12px,3vw,32px) 110px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+    h1{font:clamp(24px,3vw,32px) Georgia,serif;margin:0}h2{font-size:17px;margin:0}
+    .sub,.muted{color:var(--muted);font-size:13px;margin-top:6px}
+    .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .chip{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+    .chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+    .button{background:var(--ink);color:var(--bg);border:0;border-radius:8px;padding:10px 14px;cursor:pointer;font:inherit;font-weight:700;font-size:14px}
+    .button.secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:clamp(14px,2vw,20px);margin-bottom:18px;box-shadow:var(--shadow)}
+    .head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+    .nav{display:flex;align-items:center;gap:6px}.nav .label{font-weight:700;font-size:14px;min-width:150px;text-align:center}
+    .pill{border:0;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;font-weight:600;background:var(--bg);color:var(--muted);cursor:pointer}
+    .pill:hover{color:var(--text)}
+    .day{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--border)}
+    .day:first-of-type{border-top:0}
+    .day.today .dlabel{color:var(--accent)}
+    .dlabel{width:84px;flex:none;font-weight:700;font-size:13px;padding-top:6px}
+    .dmeals{flex:1;display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+    .meal{display:inline-flex;align-items:center;gap:6px;border-left:3px solid var(--mc);background:color-mix(in srgb,var(--mc) 12%,var(--card));border-radius:8px;padding:5px 6px 5px 9px;font-size:13px;max-width:100%}
+    .meal b{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--mc)}
+    .meal .mname{overflow-wrap:anywhere}
+    .meal button{border:0;background:transparent;color:var(--muted);cursor:pointer;padding:2px 4px;font-size:13px}
+    .none{color:var(--muted);font-size:13px;padding-top:6px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+    .controls input[type=search]{flex:1;min-width:150px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+    .recipe{border:1px solid var(--border);border-radius:12px;padding:14px;background:var(--bg);display:flex;flex-direction:column;gap:10px;min-width:0}
+    .rtop{display:flex;gap:12px;align-items:center;cursor:pointer;min-width:0}
+    .ricon{font-size:30px;width:46px;height:46px;display:grid;place-items:center;background:var(--card);border-radius:12px;box-shadow:var(--shadow);flex:none}
+    .rname{font-weight:700;overflow-wrap:anywhere}.rmeta{font-size:12px;color:var(--muted);margin-top:3px}
+    .detail{font-size:14px;border-top:1px solid var(--border);padding-top:10px}
+    .detail h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:10px 0 4px}.detail h3:first-child{margin-top:0}
+    .detail ul,.detail ol{margin:0;padding-left:20px}.detail li{margin:3px 0}
+    .ract{display:flex;gap:6px;margin-top:auto}
+    .ract .plan{background:var(--ink);color:var(--bg)}
+    .form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+    .form-row label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--muted);min-width:0}
+    .wide{grid-column:1/-1}
+    input,select,textarea{min-width:0;width:100%;border:1px solid var(--border);border-radius:8px;padding:9px;background:var(--bg);color:var(--text);font:inherit}
+    textarea{min-height:110px;resize:vertical}
+    .actions{grid-column:1/-1;display:flex;gap:8px}
+    .hidden{display:none!important}
+    .empty{padding:18px 4px;color:var(--muted)}
+    .message{min-height:20px;color:var(--muted);font-size:13px;margin:4px 0 14px}
+    .tabbar{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:4px;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 28px #1b2a4a30;width:min(600px,calc(100% - 20px))}
+    .tabbar a{flex:1;display:grid;justify-items:center;gap:2px;padding:7px 2px;border-radius:14px;color:var(--muted);text-decoration:none;font-size:11px;font-weight:600}
+    .tabbar a span{font-size:18px;line-height:1}
+    .tabbar a.active{background:#17243a;color:#fff}
+    .tabbar .plus{flex:none;width:46px;height:46px;border-radius:14px;background:#c8553d;color:#fff;border:0;font-size:26px;cursor:pointer}
+    @media(max-width:560px){.form-row{grid-template-columns:minmax(0,1fr)}input,select,textarea{font-size:16px}.dlabel{width:64px}.nav .label{min-width:110px}.grid{grid-template-columns:minmax(0,1fr)}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="topbar">
+    <div><h1>Meals</h1><div class="sub">Your recipes and the weekly meal plan.</div></div>
+    <div class="tools"><button class="button" id="add-recipe" type="button">+ Add recipe</button><button class="chip" id="theme" type="button" aria-label="Toggle dark mode">🌙</button></div>
+  </header>
+  <p class="message" id="message" role="status" aria-live="polite"></p>
+
+  <!-- Meal plan form (create / edit a planned meal) -->
+  <section class="card hidden" id="plan-card">
+    <h2 id="plan-title">Plan a meal</h2>
+    <form class="form-row" id="plan-form">
+      <label class="wide">Recipe<select id="p-recipe" required></select></label>
+      <label>Date<input id="p-date" type="date" required></label>
+      <label>Meal<select id="p-type"></select></label>
+      <div class="actions"><button class="button" id="p-save" type="submit">Add to plan</button><button class="button secondary" id="p-cancel" type="button">Cancel</button></div>
+    </form>
+  </section>
+
+  <!-- Recipe form (create / edit a recipe) -->
+  <section class="card hidden" id="recipe-card">
+    <h2 id="recipe-title">Add recipe</h2>
+    <form class="form-row" id="recipe-form">
+      <label>Icon<input id="r-icon" maxlength="4" value="🍽️" placeholder="🍽️"></label>
+      <label>Recipe name<input id="r-name" maxlength="80" required placeholder="e.g. Chicken curry"></label>
+      <label>Category<select id="r-cat"></select></label>
+      <label>Servings<input id="r-serv" type="number" min="1" max="100" value="4"></label>
+      <label>Minutes<input id="r-min" type="number" min="0" max="1440" value="30"></label>
+      <label class="wide">Ingredients (one per line)<textarea id="r-ing"></textarea></label>
+      <label class="wide">Instructions (one step per line)<textarea id="r-steps"></textarea></label>
+      <div class="actions"><button class="button" id="r-save" type="submit">Add recipe</button><button class="button secondary" id="r-cancel" type="button">Cancel</button></div>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="head"><h2>Meal plan</h2>
+      <div class="nav"><button class="pill" id="wk-prev" aria-label="Previous week">‹</button><span class="label" id="wk-label"></span><button class="pill" id="wk-next" aria-label="Next week">›</button><button class="pill" id="wk-today">This week</button></div></div>
+    <div id="week"></div>
+  </section>
+
+  <section class="card">
+    <div class="head"><h2>Recipes <span class="muted" id="count"></span></h2></div>
+    <div class="controls"><input type="search" id="search" placeholder="Search recipes or ingredients" aria-label="Search recipes"><div class="tools" id="cats"></div></div>
+    <div class="grid" id="grid"></div>
+  </section>
+</main>
+
+<nav class="tabbar" aria-label="Main navigation">
+  <a href="index.html"><span>◫</span>Today</a>
+  <a href="calendar.html"><span>▦</span>Calendar</a>
+  <a href="tasks.html"><span>✓</span>Routines</a>
+  <a class="active" href="recipes.html"><span>🍽</span>Meals</a>
+  <a href="rewards.html"><span>★</span>Rewards</a>
+  <button class="plus" type="button" aria-label="Add recipe" onclick="openRecipe()">+</button>
+</nav>
+
+<script>
+const KEY='family-dashboard-rewards-v1';
+const TYPES=['Breakfast','Lunch','Dinner','Snack'],CATS=['Breakfast','Lunch','Dinner','Snack','Dessert'];
+const TYPE_COLOR={Breakfast:'#e0a100',Lunch:'#3b9ac4',Dinner:'#c8553d',Snack:'#7d6bd1',Dessert:'#d55f91'};
+const $=id=>document.getElementById(id),pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const lines=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean);
+const uid=p=>`${p}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+const weekStartOf=d=>{const s=new Date(d);s.setHours(0,0,0,0);s.setDate(s.getDate()-s.getDay());return s};
+
+/* ---------- shared data (same storage as the other pages) ---------- */
+const SEED_RECIPES=[
+ {id:'r-pancakes',name:'Pancakes',icon:'🥞',category:'Breakfast',servings:4,minutes:20,ingredients:'1 cup flour\n1 cup milk\n1 egg\n1 tbsp sugar\n2 tsp baking powder',instructions:'Whisk everything together.\nPour batter onto a hot greased pan.\nFlip when bubbles form and cook until golden.'},
+ {id:'r-stirfry',name:'Chicken Stir-fry',icon:'🍗',category:'Dinner',servings:4,minutes:25,ingredients:'500 g chicken strips\n2 cups mixed vegetables\n3 tbsp soy sauce\n1 tbsp oil\nCooked rice',instructions:'Heat oil and cook chicken until browned.\nAdd vegetables and stir-fry for 5 minutes.\nStir in soy sauce and serve over rice.'},
+ {id:'r-bolognese',name:'Spaghetti Bolognese',icon:'🍝',category:'Dinner',servings:5,minutes:45,ingredients:'500 g beef mince\n1 onion, diced\n1 jar pasta sauce\n400 g spaghetti',instructions:'Brown the mince with the onion.\nAdd the sauce and simmer for 20 minutes.\nCook the spaghetti and serve with the sauce.'},
+ {id:'r-friedrice',name:'Egg Fried Rice',icon:'🍚',category:'Dinner',servings:4,minutes:20,ingredients:'3 cups cooked rice\n3 eggs\n1 cup frozen peas and corn\n2 tbsp soy sauce\n2 spring onions',instructions:'Scramble the eggs in a hot pan and set aside.\nFry the vegetables, then add the rice and soy sauce.\nFold in the eggs and top with spring onion.'},
+ {id:'r-fruit',name:'Fruit Salad',icon:'🍓',category:'Snack',servings:4,minutes:10,ingredients:'2 apples\n1 banana\n1 cup berries\n1 orange',instructions:'Chop all fruit into bite-size pieces.\nToss together and serve chilled.'}];
+function seed(s){ // one-time starter recipes + a sample week of dinners; returns true if it changed s
+  if(s.mealsSeeded)return false;
+  if(!Array.isArray(s.recipes))s.recipes=SEED_RECIPES.map(r=>({...r}));
+  if(!Array.isArray(s.meals)){const ws=weekStartOf(new Date()),din=['r-stirfry','r-bolognese','r-friedrice'];s.meals=[];
+    for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(ws.getDate()+i);s.meals.push({id:'m-seed-'+i,date:ymd(d),type:'Dinner',recipeId:din[i%3]});if(i===0||i===6)s.meals.push({id:'m-seed-b'+i,date:ymd(d),type:'Breakfast',recipeId:'r-pancakes'})}}
+  s.mealsSeeded=true;return true}
+function readState(){try{const s=JSON.parse(localStorage.getItem(KEY)||'{}');return s&&typeof s==='object'?s:{}}catch(e){console.warn(e);return{}}}
+let state=readState();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){console.warn(e);msg('Could not save changes in this browser.')}}
+function ensure(){if(seed(state))save();if(!Array.isArray(state.recipes))state.recipes=[];if(!Array.isArray(state.meals))state.meals=[]}
+function commit(fn){state=readState();ensure();fn();save();render()} // re-read first so other pages' changes aren't overwritten
+const msg=t=>$('message').textContent=t;
+const recipeById=id=>state.recipes.find(r=>r.id===id);
+
+/* ---------- UI state ---------- */
+let weekStart=weekStartOf(new Date()),search='',cat='All',expanded=new Set(),editingRecipe=null,editingMeal=null;
+
+/* ---------- meal plan (read) ---------- */
+function renderWeek(){
+  const box=$('week');box.replaceChildren();const end=new Date(weekStart);end.setDate(end.getDate()+6);
+  $('wk-label').textContent=`${weekStart.toLocaleDateString(undefined,{month:'short',day:'numeric'})} – ${end.toLocaleDateString(undefined,{month:'short',day:'numeric'})}`;
+  for(let i=0;i<7;i++){const d=new Date(weekStart);d.setDate(weekStart.getDate()+i);const key=ymd(d);
+    const row=document.createElement('div');row.className='day'+(key===ymd(new Date())?' today':'');
+    const meals=state.meals.filter(m=>m.date===key&&recipeById(m.recipeId)).sort((a,b)=>TYPES.indexOf(a.type)-TYPES.indexOf(b.type));
+    row.innerHTML=`<div class="dlabel">${esc(d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'}))}</div><div class="dmeals"></div><button class="pill add" type="button" aria-label="Plan a meal on ${key}">+</button>`;
+    const dm=row.querySelector('.dmeals');
+    if(!meals.length)dm.innerHTML='<span class="none">Nothing planned</span>';
+    meals.forEach(m=>{const r=recipeById(m.recipeId),c=document.createElement('span');c.className='meal';c.style.setProperty('--mc',TYPE_COLOR[m.type]||'#888');
+      c.innerHTML=`<b>${esc(m.type)}</b><span class="mname">${esc(r.icon||'')} ${esc(r.name)}</span><button type="button" class="medit" aria-label="Change ${esc(r.name)}">✎</button><button type="button" class="mdel" aria-label="Remove ${esc(r.name)} from plan">✕</button>`;
+      c.querySelector('.medit').onclick=()=>openPlan({meal:m});
+      c.querySelector('.mdel').onclick=()=>commit(()=>{state.meals=state.meals.filter(x=>x.id!==m.id);msg(`Removed ${r.name} from ${key}.`)});
+      dm.append(c)});
+    row.querySelector('.add').onclick=()=>openPlan({date:key});
+    box.append(row)}}
+
+/* ---------- meal plan (create / update) ---------- */
+function fillRecipeSelect(sel){const keep=sel.value;sel.replaceChildren();state.recipes.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=`${r.icon||''} ${r.name}`;sel.append(o)});if(keep)sel.value=keep}
+function openPlan({meal,date,recipeId}={}){
+  if(!state.recipes.length){msg('Add a recipe first.');return}
+  closeRecipe();editingMeal=meal?meal.id:null;fillRecipeSelect($('p-recipe'));
+  $('p-recipe').value=meal?meal.recipeId:(recipeId||state.recipes[0].id);
+  $('p-date').value=meal?meal.date:(date||ymd(new Date()));
+  $('p-type').value=meal?meal.type:((recipeById($('p-recipe').value)||{}).category&&TYPES.includes(recipeById($('p-recipe').value).category)?recipeById($('p-recipe').value).category:'Dinner');
+  $('plan-title').textContent=meal?'Change planned meal':'Plan a meal';$('p-save').textContent=meal?'Save changes':'Add to plan';
+  $('plan-card').classList.remove('hidden');$('plan-card').scrollIntoView({behavior:'smooth',block:'start'})}
+function closePlan(){editingMeal=null;$('plan-card').classList.add('hidden')}
+$('plan-form').addEventListener('submit',e=>{e.preventDefault();
+  const recipeId=$('p-recipe').value,date=$('p-date').value,type=$('p-type').value;if(!recipeId||!date)return;
+  commit(()=>{if(editingMeal){const m=state.meals.find(x=>x.id===editingMeal);if(m)Object.assign(m,{recipeId,date,type})}else state.meals.push({id:uid('m'),date,type,recipeId});
+    const d=new Date(date+'T00:00');weekStart=weekStartOf(d);msg(`${editingMeal?'Updated':'Planned'} ${(recipeById(recipeId)||{}).name} for ${type.toLowerCase()} on ${d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})}.`)});
+  closePlan()});
+$('p-cancel').onclick=closePlan;
+
+/* ---------- recipes (read) ---------- */
+function renderCats(){const box=$('cats');box.replaceChildren();['All',...CATS].forEach(c=>{const b=document.createElement('button');b.type='button';b.className='chip'+(c===cat?' on':'');b.textContent=c;b.setAttribute('aria-pressed',String(c===cat));b.onclick=()=>{cat=c;render()};box.append(b)})}
+function renderRecipes(){
+  const grid=$('grid');grid.replaceChildren();const q=search.trim().toLowerCase();
+  const list=state.recipes.filter(r=>(cat==='All'||r.category===cat)&&(!q||`${r.name} ${r.ingredients}`.toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name));
+  $('count').textContent=`(${list.length}${list.length!==state.recipes.length?' of '+state.recipes.length:''})`;
+  if(!list.length){grid.innerHTML=`<div class="empty">${state.recipes.length?'No recipes match.':'No recipes yet. Tap “+ Add recipe”.'}</div>`;return}
+  list.forEach(r=>{const open=expanded.has(r.id),el=document.createElement('article');el.className='recipe';el.id='recipe-'+r.id;
+    el.innerHTML=`<div class="rtop" role="button" tabindex="0" aria-expanded="${open}"><span class="ricon">${esc(r.icon||'🍽️')}</span><div><div class="rname">${esc(r.name)}</div><div class="rmeta">${esc(r.category)} · ${Number(r.minutes)||0} min · serves ${Number(r.servings)||1}</div></div></div>
+      ${open?`<div class="detail"><h3>Ingredients</h3><ul>${lines(r.ingredients).map(x=>`<li>${esc(x)}</li>`).join('')||'<li>—</li>'}</ul><h3>Instructions</h3><ol>${lines(r.instructions).map(x=>`<li>${esc(x)}</li>`).join('')||'<li>—</li>'}</ol></div>`:''}
+      <div class="ract"><button type="button" class="pill plan">Plan meal</button><button type="button" class="pill edit" aria-label="Edit ${esc(r.name)}">✎ Edit</button><button type="button" class="pill del" aria-label="Delete ${esc(r.name)}">🗑</button></div>`;
+    const top=el.querySelector('.rtop'),tog=()=>{expanded.has(r.id)?expanded.delete(r.id):expanded.add(r.id);renderRecipes()};
+    top.onclick=tog;top.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog()}};
+    el.querySelector('.plan').onclick=()=>openPlan({recipeId:r.id});
+    el.querySelector('.edit').onclick=()=>openRecipe(r);
+    el.querySelector('.del').onclick=()=>delRecipe(r);
+    grid.append(el)})}
+
+/* ---------- recipes (create / update / delete) ---------- */
+function openRecipe(r){closePlan();editingRecipe=r?r.id:null;
+  $('r-icon').value=r?r.icon:'🍽️';$('r-name').value=r?r.name:'';$('r-cat').value=r?r.category:'Dinner';$('r-serv').value=r?r.servings:4;$('r-min').value=r?r.minutes:30;$('r-ing').value=r?r.ingredients:'';$('r-steps').value=r?r.instructions:'';
+  $('recipe-title').textContent=r?'Edit recipe':'Add recipe';$('r-save').textContent=r?'Save changes':'Add recipe';
+  $('recipe-card').classList.remove('hidden');$('recipe-card').scrollIntoView({behavior:'smooth',block:'start'});$('r-name').focus()}
+function closeRecipe(){editingRecipe=null;$('recipe-card').classList.add('hidden');$('recipe-form').reset()}
+$('recipe-form').addEventListener('submit',e=>{e.preventDefault();
+  const rec={name:$('r-name').value.trim(),icon:$('r-icon').value.trim()||'🍽️',category:$('r-cat').value,servings:Math.max(1,Math.floor(Number($('r-serv').value))||1),minutes:Math.max(0,Math.floor(Number($('r-min').value))||0),ingredients:lines($('r-ing').value).join('\n'),instructions:lines($('r-steps').value).join('\n')};
+  if(!rec.name)return;
+  commit(()=>{if(editingRecipe){const r=recipeById(editingRecipe);if(r)Object.assign(r,rec);msg(`Updated ${rec.name}.`)}else{const id=uid('r');state.recipes.push({id,...rec});expanded.add(id);msg(`Added ${rec.name}.`)}});
+  closeRecipe()});
+$('r-cancel').onclick=closeRecipe;
+function delRecipe(r){const used=state.meals.filter(m=>m.recipeId===r.id).length;
+  if(!confirm(`Delete “${r.name}”?${used?`\nIt will also be removed from ${used} planned meal${used>1?'s':''}.`:''}`))return;
+  commit(()=>{state.recipes=state.recipes.filter(x=>x.id!==r.id);state.meals=state.meals.filter(m=>m.recipeId!==r.id);expanded.delete(r.id);msg(`Deleted ${r.name}.`)});
+  if(editingRecipe===r.id)closeRecipe()}
+
+/* ---------- wiring ---------- */
+function render(){ensure();renderWeek();renderCats();renderRecipes()}
+CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;$('r-cat').append(o)});
+TYPES.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;$('p-type').append(o)});
+$('add-recipe').onclick=()=>openRecipe();
+$('search').oninput=e=>{search=e.target.value;renderRecipes()};
+$('wk-prev').onclick=()=>{weekStart.setDate(weekStart.getDate()-7);renderWeek()};
+$('wk-next').onclick=()=>{weekStart.setDate(weekStart.getDate()+7);renderWeek()};
+$('wk-today').onclick=()=>{weekStart=weekStartOf(new Date());renderWeek()};
+try{if(localStorage.getItem('family-dashboard-theme')==='dark')document.body.classList.add('dark')}catch(e){}
+$('theme').onclick=()=>{const d=document.body.classList.toggle('dark');try{localStorage.setItem('family-dashboard-theme',d?'dark':'light')}catch(e){}};
+const formsOpen=()=>!$('plan-card').classList.contains('hidden')||!$('recipe-card').classList.contains('hidden');
+const resync=()=>{if(!formsOpen()){state=readState();render()}};
+window.addEventListener('storage',e=>{if(e.key===KEY)resync()});window.addEventListener('focus',resync);
+render();
+// deep links from the calendar: recipes.html#<recipeId> opens that recipe, #plan opens the planner
+if(location.hash==='#plan')openPlan();
+else if(location.hash.length>1){const id=decodeURIComponent(location.hash.slice(1));if(recipeById(id)){expanded.add(id);cat='All';render();const el=$('recipe-'+id);if(el)el.scrollIntoView({block:'center'})}}
+</script>
+</body>
+</html>

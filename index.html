@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,6 +46,7 @@
     .task.done .ticon::after{content:"✓";position:absolute;font-size:22px;color:var(--member);font-weight:800}
     .task.done .ticon{position:relative;color:transparent;text-shadow:none}
     .edit{font-size:12px;color:var(--muted);text-align:center;padding:4px}
+    .bar.tasks{flex:none;margin-top:10px}.goal{color:var(--text);text-decoration:none;font-weight:600;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
     .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:clamp(14px,2vw,20px);margin-top:18px;box-shadow:var(--shadow)}
     .card-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.card h2{font-size:17px;margin:0}
@@ -55,7 +55,7 @@
     .form-row input,.form-row select{padding:9px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text)}
     .message,.history{color:var(--muted);font-size:13px}
 
-    .tabbar{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:4px;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 28px #1b2a4a30;width:min(560px,calc(100% - 20px))}
+    .tabbar{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:4px;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 28px #1b2a4a30;width:min(600px,calc(100% - 20px))}
     .tabbar a{flex:1;display:grid;justify-items:center;gap:2px;padding:7px 4px;border-radius:14px;color:var(--muted);text-decoration:none;font-size:11px;font-weight:600}
     .tabbar a span{font-size:18px;line-height:1}
     .tabbar a.active{background:#17243a;color:#fff}
@@ -75,7 +75,7 @@
   <div class="board" id="board"></div>
 
   <section class="card" id="redeem"><div class="card-header"><h2>Redeem stars</h2><a class="button" href="rewards.html">Manage rewards</a></div>
-    <form class="form-row" id="redeem-form"><label>Family member<select id="redeem-member"></select></label><label>Reward<input id="reward-name" placeholder="Choose a reward" required></label><label>Star cost<input id="reward-cost" type="number" min="1" value="10" required></label><button class="button">Redeem</button></form>
+    <form class="form-row" id="redeem-form"><label>Family member<select id="redeem-member"></select></label><label>Reward<select id="reward-pick"></select></label><button class="button">Redeem</button></form>
     <p class="message" id="message" role="status"></p><ul class="history" id="history"></ul>
   </section>
 </main>
@@ -84,6 +84,7 @@
   <a class="active" href="index.html"><span>◫</span>Today</a>
   <a href="calendar.html"><span>▦</span>Calendar</a>
   <a href="tasks.html"><span>✓</span>Routines</a>
+  <a href="recipes.html"><span>🍽</span>Meals</a>
   <a href="rewards.html"><span>★</span>Rewards</a>
   <button class="plus" type="button" aria-label="Redeem stars" onclick="document.getElementById('redeem').scrollIntoView({behavior:'smooth'})">+</button>
 </nav>
@@ -104,7 +105,11 @@ SECTIONS=['Morning','Afternoon','Evening','Jobs'];
 
 const pad=n=>String(n).padStart(2,'0'),ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,today=()=>ymd(new Date());
 function read(){try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.points&&s.tasks)return s}catch(e){console.warn(e)}return{points:Object.fromEntries(MEMBERS.map(m=>[m.name,0])),tasks:{},history:[]}}
-const state=read();MEMBERS.forEach(m=>state.points[m.name]=Math.max(0,Number(state.points[m.name])||0));
+const SEED=[['dessert','🍦','Choose Dessert',30],['screen','🎮','30 min Extra Screen Time',40],['movie','🎬','Pick Family Movie Night',60],['late','🌙','Stay Up 30 min Late',80],['outing','🚗','One-on-One Outing',120],['toy','🧸','$10 Toy Budget',150]];
+let state=read();
+function normalize(){MEMBERS.forEach(m=>state.points[m.name]=Math.max(0,Number(state.points[m.name])||0));if(!state.rewards||typeof state.rewards!=='object')state.rewards={};MEMBERS.forEach(m=>{if(!Array.isArray(state.rewards[m.name]))state.rewards[m.name]=SEED.map(([id,icon,name,stars])=>({id,icon,name,stars}))});if(!state.goals||typeof state.goals!=='object')state.goals={};if(!Array.isArray(state.history))state.history=[]}
+normalize();
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){console.warn(e)}}
 let log={};try{log=JSON.parse(localStorage.getItem(RKEY)||'{}')||{}}catch(e){console.warn(e)}
 function saveLog(){try{localStorage.setItem(RKEY,JSON.stringify(log))}catch(e){console.warn(e)}}
@@ -123,8 +128,9 @@ function renderBoard(){const board=document.getElementById('board'),t=today();bo
   MEMBERS.forEach(m=>{const col=el('div','col');col.style.cssText=memberStyle(m.name);
     const tasks=SECTIONS.flatMap(s=>ROUTINES[m.name][s].map(x=>tid(m.name,s,x[0]))),done=tasks.filter(id=>(log[id]||[]).includes(t)).length;
     const best=Math.max(0,...tasks.map(streak)),pts=state.points[m.name]||0;
+    const g=(state.rewards[m.name]||[]).find(r=>r.id===state.goals[m.name]),goalHtml=g?`<a class="goal" href="rewards.html" title="${esc(g.name)}">${esc(g.icon||'🎯')} ${esc(g.name)}</a><div class="bar"><i style="width:${Math.min(100,pts/g.stars*100)}%"></i></div><span class="ready">${pts>=g.stars?'ready!':(g.stars-pts)+' to go'}</span>`:`<a class="goal" href="rewards.html">Set a goal</a>`;
     const head=el('div','mhead',`<div class="mtop"><div class="avatar">${m.name[0]}</div><div><div class="mname">${m.name}</div><div class="msub">${done}/${tasks.length} done today · ${m.status}</div></div><span class="mood">${m.mood}</span></div>
-      <div class="mstats"><span class="star">★ ${pts}</span><span class="fire">🔥 ${best}</span><div class="bar"><i style="width:${tasks.length?done/tasks.length*100:0}%"></i></div><span class="ready">${pts>=GOAL?'ready!':(GOAL-pts)+' to go'}</span></div>`);
+      <div class="bar tasks"><i style="width:${tasks.length?done/tasks.length*100:0}%"></i></div><div class="mstats"><span class="star">★ ${pts}</span><span class="fire">🔥 ${best}</span>${goalHtml}</div>`);
     col.append(head);
     SECTIONS.forEach(s=>{const items=ROUTINES[m.name][s];if(!items.length)return;
       const ids=items.map(x=>tid(m.name,s,x[0])),sd=ids.filter(id=>(log[id]||[]).includes(t)).length;
@@ -142,16 +148,20 @@ function renderHistory(){const ul=document.getElementById('history');ul.replaceC
 function clock(){const d=new Date();document.getElementById('current-date').textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});document.getElementById('current-time').textContent=d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
   const h=d.getHours();document.getElementById('greeting').textContent=`Good ${h<12?'morning':h<17?'afternoon':'evening'}, Arun`}
 
-const select=document.getElementById('redeem-member');MEMBERS.forEach(m=>{const o=document.createElement('option');o.value=m.name;o.textContent=m.name;select.append(o)});
-document.getElementById('redeem-form').onsubmit=e=>{e.preventDefault();const n=select.value,reward=document.getElementById('reward-name').value.trim(),cost=Number(document.getElementById('reward-cost').value);if(!reward||cost<1)return;
-  if((state.points[n]||0)<cost){document.getElementById('message').textContent=`${n} needs ${cost-state.points[n]} more stars`;return}
-  state.points[n]-=cost;state.history=state.history||[];state.history.push({member:n,reward,cost});save();renderBoard();document.getElementById('reward-name').value='';document.getElementById('message').textContent=`${n} redeemed ${reward}`};
-
+const select=document.getElementById('redeem-member'),pick=document.getElementById('reward-pick');
+MEMBERS.forEach(m=>{const o=document.createElement('option');o.value=m.name;o.textContent=m.name;select.append(o)});
+function renderPick(){const keep=pick.value;pick.replaceChildren();(state.rewards[select.value]||[]).forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=`${r.icon||'🎁'} ${r.name} · ★ ${r.stars}`;pick.append(o)});if(!pick.options.length){const o=document.createElement('option');o.textContent='No rewards yet';o.value='';pick.append(o)}else if([...pick.options].some(o=>o.value===keep))pick.value=keep}
+select.onchange=renderPick;
+document.getElementById('redeem-form').onsubmit=e=>{e.preventDefault();const n=select.value,r=(state.rewards[n]||[]).find(x=>x.id===pick.value),msg=document.getElementById('message');if(!r){msg.textContent='Add rewards on the Rewards page first.';return}
+  if(state.points[n]<r.stars){msg.textContent=`${n} needs ${r.stars-state.points[n]} more stars`;return}
+  state.points[n]-=r.stars;state.history.push({member:n,reward:r.name,cost:r.stars,date:new Date().toISOString()});if(state.goals[n]===r.id)delete state.goals[n];save();renderBoard();renderPick();msg.textContent=`${n} redeemed ${r.name}`};
+function sync(){state=read();normalize();renderBoard();renderPick()}
+window.addEventListener('storage',e=>{if(e.key===KEY)sync()});window.addEventListener('focus',sync);
 const themeBtn=document.getElementById('theme');
 try{if(localStorage.getItem('family-dashboard-theme')==='dark')document.body.classList.add('dark')}catch(e){}
 themeBtn.onclick=()=>{const d=document.body.classList.toggle('dark');try{localStorage.setItem('family-dashboard-theme',d?'dark':'light')}catch(e){}};
 
-renderBoard();clock();setInterval(clock,1000);
+renderBoard();renderPick();clock();setInterval(clock,1000);
 </script>
 </body>
 </html>
