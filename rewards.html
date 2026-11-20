@@ -6,63 +6,145 @@
   <meta name="description" content="Manage family rewards and redeem stars">
   <title>Family Rewards</title>
   <style>
-    :root{--bg:#f3f6fb;--card:#fff;--text:#192230;--muted:#738195;--navy:#17243a;--border:#e5eaf2;--blue:#4f72be}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{min-height:100vh;display:grid;grid-template-columns:220px 1fr}.sidebar{background:var(--navy);color:#fff;padding:28px 18px;display:flex;flex-direction:column}.brand{font-weight:800;padding:0 10px 28px}.brand-mark{display:inline-grid;place-items:center;margin-right:8px;width:34px;height:34px;border-radius:50%;background:#fff;color:var(--navy)}nav{display:grid;gap:6px}nav a{padding:12px 14px;border-radius:10px;color:#b9c4d4;text-decoration:none}nav a.active,nav a:hover{background:#ffffff1a;color:#fff}.profile{margin-top:auto;border-top:1px solid #ffffff20;padding:16px 8px 0}.profile small{display:block;color:#9facbf;margin-top:3px}main{width:100%;max-width:1200px;margin:auto;padding:34px 38px 48px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}h1{font:32px Georgia,serif;margin:0}h2{font-size:18px;margin:0}.subtitle,.muted{color:var(--muted);font-size:14px;margin-top:7px}.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 6px 18px #28375008}.button{border:0;border-radius:8px;padding:9px 14px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer;text-decoration:none}.button.secondary{background:#edf3ff;color:var(--blue)}.toolbar,.form-row{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.toolbar{justify-content:space-between;align-items:center;margin-bottom:14px}.form-row label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--muted)}input,select{min-width:0;border:1px solid var(--border);border-radius:7px;padding:9px;background:#fff;color:var(--text);font:inherit}.name-input{min-width:190px}.star-input{width:100px}.person-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.person-tab{border:1px solid var(--member);border-radius:20px;padding:7px 12px;background:#fff;color:var(--member);cursor:pointer;font:inherit;font-weight:700}.person-tab.active{background:var(--member);color:#fff}.reward-list{display:grid;gap:10px}.reward{display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-left:4px solid var(--member);border-radius:10px;padding:12px;background:linear-gradient(110deg,var(--member-bg),#fff 70%)}.reward-name{flex:1;font-weight:700}.cost{white-space:nowrap;color:var(--member);font-weight:800}.actions{display:flex;gap:6px}.icon-button{border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--text);padding:7px 9px;cursor:pointer}.icon-button.redeem{border-color:var(--member);background:var(--member);color:#fff;font-weight:700}.icon-button:disabled{opacity:.45;cursor:not-allowed}.empty{padding:18px 4px;color:var(--muted)}.message{min-height:22px;color:var(--muted);font-size:14px;margin:10px 0}.history{font-size:14px;color:var(--muted);padding-left:20px}.history li{margin:6px 0}.hidden{display:none!important}@media(max-width:850px){.app{grid-template-columns:74px 1fr}.brand span,.profile div{display:none}.brand{text-align:center;padding-inline:0}nav a{text-align:center;font-size:0}.profile{text-align:center}}@media(max-width:620px){.app{display:block}.sidebar{position:fixed;z-index:2;bottom:0;left:0;right:0;height:65px;padding:7px;display:block}.brand,.profile{display:none}nav{grid-template-columns:repeat(4,1fr)}nav a{padding:12px 4px;height:50px;text-align:center}main{padding:24px 12px 82px}.card{padding:15px}.topbar h1{font-size:27px}.reward{flex-wrap:wrap}.reward-name{min-width:calc(100% - 85px)}.actions{margin-left:auto}}
+    :root{--bg:#eef1f6;--card:#fff;--text:#192230;--muted:#8592a5;--blue:#4f72be;--border:#e3e8f0;--shadow:0 1px 3px #1b2a4a14,0 4px 12px #1b2a4a0d;--track:#dfe5ee;--ink:#17243a}
+    body.dark{--bg:#101826;--card:#1a2436;--text:#e8edf5;--muted:#8d9bb2;--border:#27344b;--shadow:0 1px 3px #0006;--track:#2b3a54;--ink:#e8edf5}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{width:100%;max-width:900px;margin:auto;padding:24px clamp(12px,3vw,32px) 110px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+    h1{font:clamp(24px,3vw,32px) Georgia,serif;margin:0}h2{font-size:18px;margin:0}
+    .subtitle,.muted{color:var(--muted);font-size:13px;margin-top:6px}
+    .chip{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:clamp(14px,2vw,20px);margin-bottom:18px;box-shadow:var(--shadow)}
+    .button{border:0;border-radius:8px;padding:10px 14px;background:var(--ink);color:var(--bg);font-weight:700;cursor:pointer;font:inherit;font-weight:700;font-size:14px}
+    .button.secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+    .person-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .person-tab{border:1px solid var(--member);border-radius:20px;padding:7px 13px;background:var(--card);color:var(--member);cursor:pointer;font:inherit;font-weight:700;font-size:14px}
+    .person-tab.active{background:var(--member);color:#fff}
+    .rhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+    .rhead h2 b{color:var(--member)}
+    .reward-list{display:grid}
+    .reward{display:flex;align-items:center;gap:10px;padding:11px 2px;border-top:1px solid var(--border)}
+    .reward:first-child{border-top:0}
+    .ricon{font-size:22px;width:34px;text-align:center;flex:none}
+    .reward-name{flex:1;font-weight:650;min-width:0;overflow-wrap:anywhere}
+    .cost{width:72px;padding:7px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-weight:700;text-align:right}
+    .pill{border:0;border-radius:8px;padding:8px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:var(--bg);color:var(--muted)}
+    .pill.goal.on{background:var(--member);color:#fff}
+    .pill.redeem{background:var(--ink);color:var(--bg)}
+    .pill:disabled{opacity:.4;cursor:not-allowed}
+    .pill.icon{padding:8px 9px}
+    .actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .form-row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+    .form-row label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--muted)}
+    input{min-width:0;border:1px solid var(--border);border-radius:8px;padding:9px;background:var(--bg);color:var(--text);font:inherit}
+    .name-input{min-width:190px}.star-input{width:90px}.icon-input{width:64px;text-align:center}
+    .empty{padding:18px 4px;color:var(--muted)}
+    .message{min-height:20px;color:var(--muted);font-size:13px;margin:10px 0 0}
+    .history{font-size:14px;color:var(--muted);padding-left:20px}.history li{margin:6px 0}
+    .hidden{display:none!important}
+    .tabbar{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:4px;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 28px #1b2a4a30;width:min(560px,calc(100% - 20px))}
+    .tabbar a{flex:1;display:grid;justify-items:center;gap:2px;padding:7px 4px;border-radius:14px;color:var(--muted);text-decoration:none;font-size:11px;font-weight:600}
+    .tabbar a span{font-size:18px;line-height:1}
+    .tabbar a.active{background:#17243a;color:#fff}
+    .tabbar .plus{flex:none;width:46px;height:46px;border-radius:14px;background:#c8553d;color:#fff;border:0;font-size:26px;cursor:pointer}
+    @media(max-width:620px){.reward{flex-wrap:wrap}.reward-name{min-width:calc(100% - 100px)}.actions{margin-left:auto}.name-input{min-width:0;width:100%}.form-row>label:nth-child(2){flex:1}}
   </style>
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand"><span class="brand-mark">⌂</span><span>Family</span></div>
-      <nav aria-label="Main navigation"><a href="index.html">◫ &nbsp; Dashboard</a><a href="calendar.html">▦ &nbsp; Calendar</a><a href="tasks.html">✓ &nbsp; Tasks</a><a class="active" href="rewards.html">★ &nbsp; Rewards</a></nav>
-      <div class="profile"><strong>Family</strong><small>Reward store</small></div>
-    </aside>
-    <main>
-      <header class="topbar"><div><h1>Family Rewards</h1><div class="subtitle">Create rewards for each person and redeem them with stars.</div></div><a class="button secondary" href="index.html">Back to dashboard</a></header>
-      <section class="card">
-        <div class="toolbar"><div><h2>Reward lists</h2><div class="muted">Each person's rewards and star costs are managed separately.</div></div></div>
-        <div class="person-tabs" id="person-tabs" role="tablist" aria-label="Choose a family member"></div>
-        <form class="form-row" id="reward-form">
-          <label>Reward name<input class="name-input" id="reward-name" maxlength="80" placeholder="e.g. Choose a family movie" required></label>
-          <label>Star cost<input class="star-input" id="reward-stars" type="number" min="1" max="100000" value="10" required></label>
-          <button class="button" id="save-button" type="submit">Add reward</button>
-          <button class="button secondary hidden" id="cancel-edit" type="button">Cancel edit</button>
-        </form>
-        <p class="message" id="message" role="status" aria-live="polite"></p>
-        <div class="reward-list" id="reward-list"></div>
-      </section>
-      <section class="card"><h2>Recent redemptions</h2><ul class="history" id="history"></ul></section>
-    </main>
-  </div>
+<main>
+  <header class="topbar"><div><h1>Rewards</h1><div class="subtitle">Add, edit and redeem rewards for each person with stars.</div></div><div><a class="chip" href="index.html">← Dashboard</a> <button class="chip" id="theme" type="button" aria-label="Toggle dark mode">🌙</button></div></header>
+
+  <div class="person-tabs" id="person-tabs" role="tablist" aria-label="Choose a family member"></div>
+
+  <section class="card" id="person-card">
+    <div class="rhead"><h2 id="rewards-title"></h2></div>
+    <div class="reward-list" id="reward-list"></div>
+  </section>
+
+  <section class="card" id="form-card">
+    <h2 id="form-title" style="margin-bottom:12px">Add a reward</h2>
+    <form class="form-row" id="reward-form">
+      <label>Icon<input class="icon-input" id="reward-icon" maxlength="4" placeholder="🎁" value="🎁"></label>
+      <label>Reward name<input class="name-input" id="reward-name" maxlength="80" placeholder="e.g. Choose a family movie" required></label>
+      <label>Stars<input class="star-input" id="reward-stars" type="number" min="1" max="100000" value="10" required></label>
+      <button class="button" id="save-button" type="submit">Add reward</button>
+      <button class="button secondary hidden" id="cancel-edit" type="button">Cancel</button>
+    </form>
+    <p class="message" id="message" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="card"><h2>Recent redemptions</h2><ul class="history" id="history"></ul></section>
+</main>
+
+<nav class="tabbar" aria-label="Main navigation">
+  <a href="index.html"><span>◫</span>Today</a>
+  <a href="calendar.html"><span>▦</span>Calendar</a>
+  <a href="tasks.html"><span>✓</span>Routines</a>
+  <a class="active" href="rewards.html"><span>★</span>Rewards</a>
+  <button class="plus" type="button" aria-label="Add a reward" onclick="document.getElementById('reward-name').focus()">+</button>
+</nav>
+
 <script>
 const KEY='family-dashboard-rewards-v1';
-const MEMBERS=[
-  {name:'Arun',color:'#4f72be'},
-  {name:'Jaisy',color:'#d55f91'},
-  {name:'Joanna',color:'#2f9d72'},
-  {name:'Joshua',color:'#d97706'}
-];
-let selectedPerson=MEMBERS[0].name;
-let editingRewardId=null;
-function readState(){try{const saved=JSON.parse(localStorage.getItem(KEY)||'{}');return saved&&typeof saved==='object'?saved:{}}catch(error){console.warn('Could not read dashboard data',error);return {}}}
+const MEMBERS=[{name:'Arun',color:'#4f72be'},{name:'Jaisy',color:'#d55f91'},{name:'Joanna',color:'#2f9d72'},{name:'Joshua',color:'#d97706'}];
+const SEED=[['dessert','🍦','Choose Dessert',30],['screen','🎮','30 min Extra Screen Time',40],['movie','🎬','Pick Family Movie Night',60],['late','🌙','Stay Up 30 min Late',80],['outing','🚗','One-on-One Outing',120],['toy','🧸','$10 Toy Budget',150]];
+let selectedPerson=MEMBERS[0].name,editingId=null;
+function readState(){try{const s=JSON.parse(localStorage.getItem(KEY)||'{}');return s&&typeof s==='object'?s:{}}catch(e){console.warn(e);return{}}}
 let state=readState();
-function ensureState(){if(!state.points||typeof state.points!=='object')state.points={};MEMBERS.forEach(person=>{state.points[person.name]=Math.max(0,Number(state.points[person.name])||0)});if(!state.tasks||typeof state.tasks!=='object')state.tasks={};if(!state.rewards||typeof state.rewards!=='object')state.rewards={};MEMBERS.forEach(person=>{if(!Array.isArray(state.rewards[person.name]))state.rewards[person.name]=[]});if(!Array.isArray(state.history))state.history=[]}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));window.dispatchEvent(new Event('rewards-updated'))}catch(error){console.error('Could not save dashboard data',error);showMessage('Could not save changes in this browser.')}}
-function currentMember(){return MEMBERS.find(person=>person.name===selectedPerson)||MEMBERS[0]}
-function styleFor(person){return `--member:${person.color};--member-bg:${person.color}18`}
-function showMessage(text){document.getElementById('message').textContent=text}
-function renderTabs(){const tabs=document.getElementById('person-tabs');tabs.replaceChildren();MEMBERS.forEach(person=>{const button=document.createElement('button');button.type='button';button.className=`person-tab${person.name===selectedPerson?' active':''}`;button.style.cssText=styleFor(person);button.textContent=`${person.name} · ★ ${state.points[person.name]||0}`;button.setAttribute('role','tab');button.setAttribute('aria-selected',String(person.name===selectedPerson));button.addEventListener('click',()=>{selectedPerson=person.name;cancelEdit();showMessage('');render()});tabs.append(button)})}
-function renderRewards(){const list=document.getElementById('reward-list');list.replaceChildren();const person=currentMember();const rewards=state.rewards[person.name]||[];if(!rewards.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=`No rewards for ${person.name} yet. Add one above.`;list.append(empty);return}rewards.forEach(reward=>{const row=document.createElement('div');row.className='reward';row.style.cssText=styleFor(person);const name=document.createElement('div');name.className='reward-name';name.textContent=reward.name;const cost=document.createElement('div');cost.className='cost';cost.textContent=`★ ${reward.stars} stars`;const actions=document.createElement('div');actions.className='actions';const redeem=document.createElement('button');redeem.type='button';redeem.className='icon-button redeem';redeem.textContent='Redeem';redeem.disabled=(state.points[person.name]||0)<reward.stars;redeem.setAttribute('aria-label',`Redeem ${reward.name} for ${person.name}`);redeem.addEventListener('click',()=>redeemReward(person.name,reward.id));const edit=document.createElement('button');edit.type='button';edit.className='icon-button';edit.textContent='Edit';edit.addEventListener('click',()=>startEdit(reward));const remove=document.createElement('button');remove.type='button';remove.className='icon-button';remove.textContent='Delete';remove.setAttribute('aria-label',`Delete ${reward.name}`);remove.addEventListener('click',()=>deleteReward(person.name,reward.id));actions.append(redeem,edit,remove);row.append(name,cost,actions);list.append(row)})}
-function renderHistory(){const list=document.getElementById('history');list.replaceChildren();const entries=state.history.slice(-10).reverse();if(!entries.length){const empty=document.createElement('li');empty.textContent='No rewards redeemed yet.';list.append(empty);return}entries.forEach(entry=>{const li=document.createElement('li');const when=entry.date?new Date(entry.date).toLocaleDateString():'';li.textContent=`${entry.member} redeemed “${entry.reward}” for ${entry.cost} stars${when?` · ${when}`:''}`;list.append(li)})}
+function ensureState(){
+  if(!state.points||typeof state.points!=='object')state.points={};
+  if(!state.tasks||typeof state.tasks!=='object')state.tasks={};
+  if(!state.rewards||typeof state.rewards!=='object')state.rewards={};
+  if(!state.goals||typeof state.goals!=='object')state.goals={};
+  if(!Array.isArray(state.history))state.history=[];
+  MEMBERS.forEach(m=>{state.points[m.name]=Math.max(0,Number(state.points[m.name])||0);if(!Array.isArray(state.rewards[m.name]))state.rewards[m.name]=SEED.map(([id,icon,name,stars])=>({id,icon,name,stars}))})}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){console.error(e);msg('Could not save changes in this browser.')}}
+const $=id=>document.getElementById(id),msg=t=>$('message').textContent=t;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const member=()=>MEMBERS.find(m=>m.name===selectedPerson)||MEMBERS[0];
+const mstyle=m=>`--member:${m.color};--member-bg:${m.color}18`;
+
+function renderTabs(){const box=$('person-tabs');box.replaceChildren();MEMBERS.forEach(m=>{const b=document.createElement('button');b.type='button';b.className='person-tab'+(m.name===selectedPerson?' active':'');b.style.cssText=mstyle(m);b.textContent=`${m.name} · ★ ${state.points[m.name]}`;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(m.name===selectedPerson));b.onclick=()=>{selectedPerson=m.name;resetForm();msg('');render()};box.append(b)})}
+
+function renderRewards(){
+  const m=member(),list=$('reward-list'),rewards=state.rewards[m.name],bal=state.points[m.name];
+  $('person-card').style.cssText=mstyle(m);$('form-card').style.cssText=mstyle(m);
+  $('rewards-title').innerHTML=`${esc(m.name)}'s Rewards · <b>★ ${bal}</b>`;
+  list.replaceChildren();
+  if(!rewards.length){list.innerHTML=`<div class="empty">No rewards for ${esc(m.name)} yet. Add one below.</div>`;return}
+  rewards.forEach(r=>{
+    const isGoal=state.goals[m.name]===r.id,row=document.createElement('div');row.className='reward';
+    row.innerHTML=`<span class="ricon">${esc(r.icon||'🎁')}</span><div class="reward-name">${esc(r.name)}</div>
+      <input class="cost" type="number" min="1" max="100000" value="${r.stars}" aria-label="Star cost for ${esc(r.name)}">
+      <div class="actions"><button type="button" class="pill goal${isGoal?' on':''}">${isGoal?'🎯 Goal':'Set goal'}</button><button type="button" class="pill redeem"${bal<r.stars?' disabled':''}>Redeem</button><button type="button" class="pill icon edit" aria-label="Edit ${esc(r.name)}">✎</button><button type="button" class="pill icon del" aria-label="Delete ${esc(r.name)}">🗑</button></div>`;
+    row.querySelector('.cost').onchange=e=>{const v=Number(e.target.value);if(!Number.isInteger(v)||v<1||v>100000){e.target.value=r.stars;msg('Star cost must be a whole number from 1 to 100000.');return}r.stars=v;save();msg(`${r.name} now costs ${v} stars.`);render()};
+    row.querySelector('.goal').onclick=()=>{if(isGoal)delete state.goals[m.name];else state.goals[m.name]=r.id;save();msg(isGoal?'Goal cleared.':`Goal set: ${r.name}.`);render()};
+    row.querySelector('.redeem').onclick=()=>redeem(m.name,r.id);
+    row.querySelector('.edit').onclick=()=>startEdit(r);
+    row.querySelector('.del').onclick=()=>del(m.name,r.id);
+    list.append(row)})}
+
+function renderHistory(){const ul=$('history');ul.replaceChildren();const items=state.history.slice(-10).reverse();if(!items.length){ul.innerHTML='<li>No rewards redeemed yet.</li>';return}items.forEach(x=>{const li=document.createElement('li');const when=x.date?new Date(x.date).toLocaleDateString():'';li.textContent=`${x.member} redeemed “${x.reward}” for ${x.cost} stars${when?` · ${when}`:''}`;ul.append(li)})}
 function render(){ensureState();renderTabs();renderRewards();renderHistory()}
-function resetForm(){document.getElementById('reward-form').reset();document.getElementById('reward-stars').value='10';editingRewardId=null;document.getElementById('save-button').textContent='Add reward';document.getElementById('cancel-edit').classList.add('hidden')}
-function cancelEdit(){resetForm()}
-function startEdit(reward){editingRewardId=reward.id;document.getElementById('reward-name').value=reward.name;document.getElementById('reward-stars').value=reward.stars;document.getElementById('save-button').textContent='Save changes';document.getElementById('cancel-edit').classList.remove('hidden');document.getElementById('reward-name').focus()}
-function deleteReward(personName,rewardId){const reward=(state.rewards[personName]||[]).find(item=>item.id===rewardId);if(!reward||!confirm(`Delete “${reward.name}” from ${personName}'s rewards?`))return;state.rewards[personName]=state.rewards[personName].filter(item=>item.id!==rewardId);if(editingRewardId===rewardId)resetForm();save();showMessage(`Deleted ${reward.name} from ${personName}'s list.`);render()}
-function redeemReward(personName,rewardId){const reward=(state.rewards[personName]||[]).find(item=>item.id===rewardId);if(!reward)return;const balance=Number(state.points[personName])||0;if(balance<reward.stars){showMessage(`${personName} needs ${reward.stars-balance} more stars for ${reward.name}.`);return}state.points[personName]=balance-reward.stars;state.history.push({member:personName,reward:reward.name,cost:reward.stars,date:new Date().toISOString()});save();showMessage(`${personName} redeemed ${reward.name} for ${reward.stars} stars.`);render()}
-document.getElementById('reward-form').addEventListener('submit',event=>{event.preventDefault();const name=document.getElementById('reward-name').value.trim();const stars=Number(document.getElementById('reward-stars').value);if(!name||!Number.isInteger(stars)||stars<1||stars>100000){showMessage('Enter a reward name and a whole-number star cost of at least 1.');return}const rewards=state.rewards[selectedPerson];if(editingRewardId){const reward=rewards.find(item=>item.id===editingRewardId);if(!reward)return;reward.name=name;reward.stars=stars;showMessage(`Updated ${name} for ${selectedPerson}.`)}else{rewards.push({id:`reward-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,name,stars});showMessage(`Added ${name} to ${selectedPerson}'s rewards.`)}save();resetForm();render()});
-document.getElementById('cancel-edit').addEventListener('click',cancelEdit);
-window.addEventListener('storage',event=>{if(event.key===KEY){state=readState();render()}});
+
+function resetForm(){$('reward-form').reset();$('reward-icon').value='🎁';$('reward-stars').value='10';editingId=null;$('save-button').textContent='Add reward';$('form-title').textContent='Add a reward';$('cancel-edit').classList.add('hidden')}
+function startEdit(r){editingId=r.id;$('reward-icon').value=r.icon||'🎁';$('reward-name').value=r.name;$('reward-stars').value=r.stars;$('save-button').textContent='Save changes';$('form-title').textContent='Edit reward';$('cancel-edit').classList.remove('hidden');$('form-card').scrollIntoView({behavior:'smooth',block:'center'});$('reward-name').focus()}
+function del(p,id){const r=state.rewards[p].find(x=>x.id===id);if(!r||!confirm(`Delete “${r.name}” from ${p}'s rewards?`))return;state.rewards[p]=state.rewards[p].filter(x=>x.id!==id);if(state.goals[p]===id)delete state.goals[p];if(editingId===id)resetForm();save();msg(`Deleted ${r.name}.`);render()}
+function redeem(p,id){const r=state.rewards[p].find(x=>x.id===id);if(!r)return;const bal=state.points[p];if(bal<r.stars){msg(`${p} needs ${r.stars-bal} more stars for ${r.name}.`);return}state.points[p]=bal-r.stars;state.history.push({member:p,reward:r.name,cost:r.stars,date:new Date().toISOString()});if(state.goals[p]===id)delete state.goals[p];save();msg(`${p} redeemed ${r.name} for ${r.stars} stars.`);render()}
+
+$('reward-form').addEventListener('submit',e=>{e.preventDefault();
+  const name=$('reward-name').value.trim(),icon=$('reward-icon').value.trim()||'🎁',stars=Number($('reward-stars').value);
+  if(!name||!Number.isInteger(stars)||stars<1||stars>100000){msg('Enter a reward name and a whole-number star cost of at least 1.');return}
+  const list=state.rewards[selectedPerson];
+  if(editingId){const r=list.find(x=>x.id===editingId);if(!r)return;Object.assign(r,{name,icon,stars});msg(`Updated ${name}.`)}
+  else{list.push({id:`reward-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,icon,name,stars});msg(`Added ${name} to ${selectedPerson}'s rewards.`)}
+  save();resetForm();render()});
+$('cancel-edit').onclick=resetForm;
+
+try{if(localStorage.getItem('family-dashboard-theme')==='dark')document.body.classList.add('dark')}catch(e){}
+$('theme').onclick=()=>{const d=document.body.classList.toggle('dark');try{localStorage.setItem('family-dashboard-theme',d?'dark':'light')}catch(e){}};
+window.addEventListener('storage',e=>{if(e.key===KEY){state=readState();render()}});
 window.addEventListener('focus',()=>{state=readState();render()});
 render();
 </script>
