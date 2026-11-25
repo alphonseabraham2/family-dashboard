@@ -2,176 +2,196 @@
 <html lang="en">
 <head>
   <script src="sync.js"></script>
+  <script src="common.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Family tasks, assignments, dates, and rewards">
-  <title>Family Tasks</title>
+  <meta name="description" content="Edit daily routines and one-off tasks with points for done and missed">
+  <title>Routines &amp; Tasks</title>
   <style>
     :root{--bg:#eef1f6;--card:#fff;--text:#192230;--muted:#8592a5;--blue:#4f72be;--green:#63b89a;--border:#e3e8f0;--shadow:0 1px 3px #1b2a4a14,0 4px 12px #1b2a4a0d;--track:#dfe5ee;--ink:#17243a;--red:#d64545}
     body.dark{--bg:#101826;--card:#1a2436;--text:#e8edf5;--muted:#8d9bb2;--border:#27344b;--shadow:0 1px 3px #0006;--track:#2b3a54;--ink:#e8edf5}
     *{box-sizing:border-box}
     body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     main{width:100%;max-width:900px;margin:auto;padding:24px clamp(12px,3vw,32px) 110px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-    h1{font:clamp(24px,3vw,32px) Georgia,serif;margin:0}h2{font-size:17px;margin:0}
+    .topbar{margin-bottom:14px}
+    h1{font:clamp(24px,3vw,32px) Georgia,serif;margin:0}h2{font-size:17px;margin:0}h3{font-size:14px;margin:16px 0 4px;color:var(--member)}
     .date,.muted{color:var(--muted);font-size:13px;margin-top:6px}
-    .tools{display:flex;gap:8px;align-items:center}
-    .chip{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+    .chip{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
     .chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+    .chip.person{border-color:var(--c);color:var(--c)}.chip.person.on{background:var(--c);color:#fff}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
     .button{background:var(--ink);color:var(--bg);border:0;border-radius:8px;padding:10px 14px;cursor:pointer;font:inherit;font-weight:700;font-size:14px}
     .button.secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
     .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:clamp(14px,2vw,20px);margin-bottom:18px;box-shadow:var(--shadow)}
-    .progress{height:7px;background:var(--track);border-radius:8px;margin:12px 0 8px;overflow:hidden}.progress div{height:100%;background:var(--green);width:0;transition:width .25s}
-    .progress-label{color:var(--muted);font-size:13px}
-    .filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
-    .filters .chip{border-color:var(--member,var(--border));color:var(--member,var(--text))}
-    .filters .chip.on{background:var(--member,var(--ink));color:#fff;border-color:var(--member,var(--ink))}
-    .task-list{display:grid;margin-top:8px}
-    .task{display:flex;align-items:center;gap:12px;padding:12px 2px 12px 10px;border-top:1px solid var(--border);border-left:4px solid var(--member);min-width:0}
-    .task:first-child{border-top:0}
-    .task input[type=checkbox]{width:22px;height:22px;accent-color:var(--member);flex:none;cursor:pointer}
-    .tmain{flex:1;min-width:0}
-    .ttitle{font-weight:650;overflow-wrap:anywhere}
-    .tmeta{font-size:12px;color:var(--muted);margin-top:3px}
-    .who{color:var(--member);font-weight:700}
-    .late{color:var(--red);font-weight:700}
-    .tstars{white-space:nowrap;font-weight:700;color:#d49b00;font-size:14px}
-    .task.done .ttitle{text-decoration:line-through;color:var(--muted)}
-    .pill{border:0;border-radius:8px;padding:8px 9px;font:inherit;font-size:13px;background:var(--bg);color:var(--muted);cursor:pointer}
-    .pill:hover{color:var(--text)}
-    .empty{padding:20px 4px;color:var(--muted)}
+    .head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .sec{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:10px 0 2px}
+    .row{display:flex;align-items:center;gap:12px;padding:10px 2px 10px 10px;border-top:1px solid var(--border);border-left:4px solid var(--member);min-width:0}
+    .row:first-of-type{border-top:0}
+    .ricon{font-size:22px;width:34px;text-align:center;flex:none}
+    .tmain{flex:1;min-width:0}.ttitle{font-weight:650;overflow-wrap:anywhere}.tmeta{font-size:12px;color:var(--muted);margin-top:3px}
+    .pp{color:#2f9d72;font-weight:700}.pn{color:var(--red);font-weight:700}.who{color:var(--member);font-weight:700}.late{color:var(--red);font-weight:700}
+    .row input[type=checkbox]{width:22px;height:22px;accent-color:var(--member);flex:none;cursor:pointer}
+    .row.done .ttitle{text-decoration:line-through;color:var(--muted)}
+    .pill{border:0;border-radius:8px;padding:8px 9px;font:inherit;font-size:13px;background:var(--bg);color:var(--muted);cursor:pointer}.pill:hover{color:var(--text)}
+    .progress{height:7px;background:var(--track);border-radius:8px;margin:12px 0 6px;overflow:hidden}.progress div{height:100%;background:var(--green);width:0;transition:width .25s}
     .form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
     .form-row label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--muted);min-width:0}
-    .form-row .wide{grid-column:1/-1}
+    .wide{grid-column:1/-1}
     input,select{min-width:0;width:100%;border:1px solid var(--border);border-radius:8px;padding:9px;background:var(--bg);color:var(--text);font:inherit}
-    .form-actions{grid-column:1/-1;display:flex;gap:8px}
+    .hint{grid-column:1/-1;margin:0;font-size:12px;color:var(--muted)}
+    .actions{grid-column:1/-1;display:flex;gap:8px}
     .hidden{display:none!important}
-    .message{min-height:20px;color:var(--muted);font-size:13px;margin:10px 0 0}
-    .tabbar{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:4px;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 28px #1b2a4a30;width:min(600px,calc(100% - 20px))}
-    .tabbar a{flex:1;display:grid;justify-items:center;gap:2px;padding:7px 4px;border-radius:14px;color:var(--muted);text-decoration:none;font-size:11px;font-weight:600}
-    .tabbar a span{font-size:18px;line-height:1}
-    .tabbar a.active{background:#17243a;color:#fff}
-    .tabbar .plus{flex:none;width:46px;height:46px;border-radius:14px;background:#c8553d;color:#fff;border:0;font-size:26px;cursor:pointer}
-    @media(max-width:520px){.form-row{grid-template-columns:minmax(0,1fr)}input,select{font-size:16px}.tstars{font-size:13px}}
+    .empty{padding:14px 2px;color:var(--muted);font-size:14px}
+    .message{min-height:20px;color:var(--muted);font-size:13px;margin:0 0 14px}
+    @media(max-width:520px){.form-row{grid-template-columns:minmax(0,1fr)}input,select{font-size:16px}}
   </style>
 </head>
 <body>
 <main>
-  <header class="topbar">
-    <div><h1>Tasks</h1><div class="date">Add, edit, assign and complete tasks to earn stars.</div></div>
-    <div class="tools"><button class="button" id="add-task" type="button">+ Add task</button><button class="chip" id="theme" type="button" aria-label="Toggle dark mode">🌙</button></div>
-  </header>
+  <header class="topbar"><h1>Routines &amp; Tasks</h1><div class="date">Edit each person's daily routine, add one-off tasks, and set points for done and missed.</div></header>
+  <div class="filters" id="filters" role="group" aria-label="Filter by person"></div>
+  <p class="message" id="message" role="status" aria-live="polite"></p>
 
-  <section class="card hidden" id="form-card">
-    <h2 id="form-title">Add task</h2>
-    <form class="form-row" id="task-form">
-      <label class="wide">Task<input id="f-title" maxlength="120" placeholder="e.g. Take out the bins" required></label>
-      <label>Assigned to<select id="f-assignee"></select></label>
-      <label>Stars<input id="f-points" type="number" min="1" max="1000" value="10" required></label>
-      <label>Date<input id="f-date" type="date" required></label>
-      <label>Time<input id="f-time" type="time" value="09:00"></label>
-      <div class="form-actions"><button class="button" id="f-save" type="submit">Add task</button><button class="button secondary" id="f-cancel" type="button">Cancel</button></div>
+  <!-- Routine form -->
+  <section class="card hidden" id="routine-form-card">
+    <h2 id="rf-title">Add routine</h2>
+    <form class="form-row" id="routine-form">
+      <label>Person<select id="rf-member"></select></label>
+      <label>When<select id="rf-section"></select></label>
+      <label>Icon<input id="rf-icon" maxlength="4" value="✅"></label>
+      <label>Name<input id="rf-name" maxlength="60" required placeholder="e.g. Take a shower"></label>
+      <label class="wide">Note (optional)<input id="rf-sub" maxlength="40" placeholder="e.g. tap to log min"></label>
+      <label>Points when done<input id="rf-points" type="number" step="1" value="1" required></label>
+      <label>Points lost if not done<input id="rf-pen" type="number" step="1" min="0" value="0" required></label>
+      <p class="hint">Example: Shower, +1 when done, 2 lost if not done. Points lost are taken off at the end of the day. Use a negative number for "when done" if doing it should cost points.</p>
+      <div class="actions"><button class="button" id="rf-save" type="submit">Add routine</button><button class="button secondary" id="rf-cancel" type="button">Cancel</button></div>
     </form>
   </section>
 
   <section class="card">
-    <div class="rhead"><h2>Task progress</h2></div>
+    <div class="head"><h2>Daily routines</h2><button class="button" id="add-routine" type="button">+ Add routine</button></div>
+    <div id="routine-list"></div>
+  </section>
+
+  <!-- Task form -->
+  <section class="card hidden" id="task-form-card">
+    <h2 id="tf-title">Add task</h2>
+    <form class="form-row" id="task-form">
+      <label class="wide">Task<input id="tf-title-in" maxlength="120" required placeholder="e.g. Take out the bins"></label>
+      <label>Assigned to<select id="tf-assignee"></select></label>
+      <label>Points when done<input id="tf-points" type="number" step="1" value="10" required></label>
+      <label>Date<input id="tf-date" type="date" required></label>
+      <label>Time<input id="tf-time" type="time" value="09:00"></label>
+      <label class="wide">Points lost if not done by then<input id="tf-pen" type="number" step="1" min="0" value="0" required></label>
+      <div class="actions"><button class="button" id="tf-save" type="submit">Add task</button><button class="button secondary" id="tf-cancel" type="button">Cancel</button></div>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="head"><h2>One-off tasks</h2><button class="button" id="add-task" type="button">+ Add task</button></div>
     <div class="progress"><div id="progress-bar"></div></div>
-    <div class="progress-label" id="progress-label"></div>
-    <div class="filters" id="filters" role="group" aria-label="Filter by person"></div>
-    <div class="task-list" id="task-list"></div>
-    <p class="message" id="message" role="status" aria-live="polite"></p>
+    <div class="muted" id="progress-label"></div>
+    <div id="task-list"></div>
   </section>
 </main>
-
-<nav class="tabbar" aria-label="Main navigation">
-  <a href="index.html"><span>◫</span>Today</a>
-  <a href="calendar.html"><span>▦</span>Calendar</a>
-  <a class="active" href="tasks.html"><span>✓</span>Routines</a>
-  <a href="recipes.html"><span>🍽</span>Meals</a>
-  <a href="rewards.html"><span>★</span>Rewards</a>
-  <button class="plus" type="button" aria-label="Add task" onclick="openForm()">+</button>
-</nav>
+<nav id="tabbar"></nav>
 
 <script>
-const KEY='family-dashboard-rewards-v1';
-const MEMBERS=[{name:'Arun',color:'#4f72be'},{name:'Jaisy',color:'#d55f91'},{name:'Joanna',color:'#2f9d72'},{name:'Joshua',color:'#d97706'}];
-const byName=Object.fromEntries(MEMBERS.map(m=>[m.name,m]));
-const DEFAULTS=[['kitchen','Clean the kitchen','08:30'],['groceries','Order groceries','10:00'],['plants','Water the plants','15:30'],['dentist','Schedule dentist appointment','18:00']];
+const {MEMBERS,SECTIONS,esc,signed,byName}=FH;
 const $=id=>document.getElementById(id);
-const pad=n=>String(n).padStart(2,'0');
-const today=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let filter='All',editingId=null;
-
-function readState(){try{const s=JSON.parse(localStorage.getItem(KEY)||'{}');return s&&typeof s==='object'?s:{}}catch(e){console.warn(e);return{}}}
-let state=readState();
-function ensure(){
-  if(!state.points||typeof state.points!=='object')state.points={};
-  MEMBERS.forEach(m=>state.points[m.name]=Math.max(0,Number(state.points[m.name])||0));
-  if(!state.tasks||typeof state.tasks!=='object')state.tasks={};
-  if(!Array.isArray(state.history))state.history=[];
-  if(!state.tasksSeeded){DEFAULTS.forEach(([id,title,time])=>{if(!state.tasks[id])state.tasks[id]={title,time,date:today(),points:10,assignee:'Arun',completed:false}});state.tasksSeeded=true;save()}
-  Object.values(state.tasks).forEach(t=>{if(!byName[t.assignee])t.assignee='Arun'})}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){console.warn(e);msg('Could not save changes in this browser.')}}
+const DEFAULT_TASKS=[['kitchen','Clean the kitchen','08:30'],['groceries','Order groceries','10:00'],['plants','Water the plants','15:30'],['dentist','Schedule dentist appointment','18:00']];
+let who='All',editRoutine=null,editTask=null;
 const msg=t=>$('message').textContent=t;
-const mstyle=n=>{const p=byName[n]||MEMBERS[0];return `--member:${p.color}`};
+const mstyle=n=>`--member:${(byName[n]||MEMBERS[0]).color}`;
+const int=v=>{const n=Number(v);return Number.isInteger(n)&&Math.abs(n)<=100000?n:null};
 
-// Stars: awarded to the assignee on completion, refunded if undone, reassigned, re-valued or deleted.
-function award(t){const s=Math.max(1,Number(t.points)||1);state.points[t.assignee]=(state.points[t.assignee]||0)+s;t.awarded={to:t.assignee,stars:s}}
-function refund(t){const a=t.awarded||{to:t.assignee,stars:Math.max(1,Number(t.points)||1)};state.points[a.to]=Math.max(0,(state.points[a.to]||0)-a.stars);delete t.awarded}
+function seedTasks(){const s=FH.state;if(s.tasksSeeded)return;DEFAULT_TASKS.forEach(([id,title,time])=>{if(!s.tasks[id])s.tasks[id]={title,time,date:FH.today(),points:10,penalty:0,assignee:'Arun',completed:false}});s.tasksSeeded=true;FH.save()}
+function readHash(){const h=decodeURIComponent(location.hash.slice(1));if(byName[h])who=h;if(h==='add')setTimeout(()=>openRoutine(),0)}
 
-// CREATE / UPDATE
-function openForm(task){
-  editingId=task?task.id:null;
-  $('form-title').textContent=task?'Edit task':'Add task';$('f-save').textContent=task?'Save changes':'Add task';
-  $('f-title').value=task?task.title:'';$('f-assignee').value=task?task.assignee:(filter!=='All'?filter:'Arun');
-  $('f-points').value=task?task.points:10;$('f-date').value=task?task.date:today();$('f-time').value=task?task.time:'09:00';
-  $('form-card').classList.remove('hidden');$('form-card').scrollIntoView({behavior:'smooth',block:'start'});$('f-title').focus()}
-function closeForm(){editingId=null;$('form-card').classList.add('hidden');$('task-form').reset()}
-$('task-form').addEventListener('submit',e=>{e.preventDefault();
-  const title=$('f-title').value.trim(),points=Math.floor(Number($('f-points').value)),date=$('f-date').value||today(),time=$('f-time').value||'09:00',assignee=$('f-assignee').value;
-  if(!title||!(points>=1)){msg('Enter a task name and a star value of at least 1.');return}
-  if(editingId){const t=state.tasks[editingId];if(!t)return closeForm();const was=t.completed;if(was)refund(t);Object.assign(t,{title,points,date,time,assignee});if(was)award(t);msg(`Updated “${title}”.`)}
-  else{state.tasks['task-'+Date.now()+'-'+Math.random().toString(36).slice(2,6)]={title,points,date,time,assignee,completed:false};msg(`Added “${title}” for ${assignee}.`)}
-  save();closeForm();render()});
-$('f-cancel').onclick=closeForm;
-$('add-task').onclick=()=>openForm();
+function renderFilters(){const box=$('filters');box.replaceChildren();['All',...MEMBERS.map(m=>m.name)].forEach(n=>{const b=document.createElement('button');b.type='button';b.className='chip'+(n===who?' on':'');if(n!=='All'){b.classList.add('person');b.style.setProperty('--c',byName[n].color)}b.textContent=n==='All'?'Everyone':n;b.setAttribute('aria-pressed',String(n===who));b.onclick=()=>{who=n;render()};box.append(b)})}
 
-function ask(btn,fn){if(btn.dataset.armed){fn();return}btn.dataset.armed='1';const old=btn.textContent;btn.textContent='Delete?';btn.style.color='#d64545';btn.style.fontWeight='700';setTimeout(()=>{if(btn.isConnected){delete btn.dataset.armed;btn.textContent=old;btn.style.color='';btn.style.fontWeight=''}},3000)} // tap twice to delete (pop-up confirm() is blocked in published pages)
-// UPDATE (complete) / DELETE
-function toggle(id,checked){const t=state.tasks[id];if(!t)return;if(checked&&!t.completed){t.completed=true;award(t);msg(`${t.assignee} earned ${t.awarded.stars} stars.`)}else if(!checked&&t.completed){refund(t);t.completed=false;msg('Task reopened; stars removed.')}save();render()}
-function del(id){const t=state.tasks[id];if(!t)return;if(t.completed)refund(t);delete state.tasks[id];if(editingId===id)closeForm();save();msg(`Deleted “${t.title}”.`);render()}
+/* ===== Routines: create / read / update / delete ===== */
+function renderRoutines(){
+  const list=$('routine-list');list.replaceChildren();const s=FH.state;let any=false;
+  MEMBERS.filter(m=>who==='All'||m.name===who).forEach(m=>{
+    const items=s.routines.filter(r=>r.member===m.name);
+    const wrap=document.createElement('div');wrap.style.cssText=mstyle(m.name);wrap.innerHTML=`<h3>${esc(m.name)}</h3>`;
+    if(!items.length)wrap.insertAdjacentHTML('beforeend','<div class="empty">No routines yet.</div>');
+    SECTIONS.forEach(sec=>{const rs=items.filter(r=>r.section===sec);if(!rs.length)return;any=true;
+      wrap.insertAdjacentHTML('beforeend',`<div class="sec">${sec}</div>`);
+      rs.forEach(r=>{const p=Number(r.points)||0,pen=Number(r.penalty)||0,row=document.createElement('div');row.className='row';
+        row.innerHTML=`<span class="ricon">${esc(r.icon||'✅')}</span><div class="tmain"><div class="ttitle">${esc(r.name)}</div><div class="tmeta">${r.sub?esc(r.sub)+' · ':''}<span class="pp">${signed(p)} ★ when done</span>${pen>0?` · <span class="pn">−${pen} ★ if not done</span>`:''}</div></div><button type="button" class="pill edit" aria-label="Edit ${esc(r.name)}">✎</button><button type="button" class="pill del" aria-label="Delete ${esc(r.name)}">🗑</button>`;
+        row.querySelector('.edit').onclick=()=>openRoutine(r);
+        row.querySelector('.del').onclick=e=>FH.ask(e.currentTarget,()=>delRoutine(r));
+        wrap.append(row)})});
+    list.append(wrap)});
+}
+function openRoutine(r){closeTask();editRoutine=r?r.id:null;
+  $('rf-member').value=r?r.member:(who!=='All'?who:MEMBERS[0].name);$('rf-section').value=r?r.section:'Morning';$('rf-icon').value=r?r.icon:'✅';
+  $('rf-name').value=r?r.name:'';$('rf-sub').value=r?r.sub:'';$('rf-points').value=r?r.points:1;$('rf-pen').value=r?(r.penalty||0):0;
+  $('rf-title').textContent=r?'Edit routine':'Add routine';$('rf-save').textContent=r?'Save changes':'Add routine';
+  $('routine-form-card').classList.remove('hidden');$('routine-form-card').scrollIntoView({behavior:'smooth',block:'start'});$('rf-name').focus()}
+function closeRoutine(){editRoutine=null;$('routine-form-card').classList.add('hidden')}
+$('routine-form').addEventListener('submit',e=>{e.preventDefault();
+  const name=$('rf-name').value.trim(),points=int($('rf-points').value),pen=int($('rf-pen').value);
+  if(!name||points===null||pen===null||pen<0){msg('Enter a name and whole numbers for the points.');return}
+  const data={member:$('rf-member').value,section:$('rf-section').value,icon:$('rf-icon').value.trim()||'✅',name,sub:$('rf-sub').value.trim(),points,penalty:pen};
+  const s=FH.state;
+  if(editRoutine){const r=FH.routine(editRoutine);if(r){const wasDone=FH.doneToday(r.id);if(wasDone){FH.addPoints(r.member,-(Number(r.points)||0))} Object.assign(r,data);if(wasDone)FH.addPoints(r.member,Number(r.points)||0);msg(`Updated ${name}.`)}}
+  else{s.routines.push({id:FH.uid('r'),...data,created:FH.today()});msg(`Added ${name} to ${data.member}'s ${data.section.toLowerCase()} routine.`)}
+  FH.save();closeRoutine();render()});
+$('rf-cancel').onclick=closeRoutine;$('add-routine').onclick=()=>openRoutine();
+function delRoutine(r){const s=FH.state;if(FH.doneToday(r.id))FH.addPoints(r.member,-(Number(r.points)||0));
+  s.routines=s.routines.filter(x=>x.id!==r.id);const l=FH.logRead();delete l[r.id];FH.logSave(l);FH.save();if(editRoutine===r.id)closeRoutine();msg(`Deleted ${r.name}.`);render()}
 
-// READ
-function fmtDate(d){const x=new Date(d+'T00:00');return isNaN(x)?d:x.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})}
-function fmtTime(t){const x=new Date('1970-01-01T'+t);return isNaN(x)?t:x.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}
-function renderFilters(){const box=$('filters');box.replaceChildren();['All',...MEMBERS.map(m=>m.name)].forEach(n=>{const b=document.createElement('button');b.type='button';b.className='chip'+(n===filter?' on':'');if(n!=='All')b.style.cssText=mstyle(n);b.textContent=n;b.setAttribute('aria-pressed',String(n===filter));b.onclick=()=>{filter=n;render()};box.append(b)})}
-function render(){
-  ensure();renderFilters();
+/* ===== One-off tasks: create / read / update / delete (points when done, penalty when missed) ===== */
+const award=t=>{const n=Number(t.points)||0;FH.addPoints(t.assignee,n);t.awarded={to:t.assignee,stars:n}};
+const refundAward=t=>{const a=t.awarded||{to:t.assignee,stars:Number(t.points)||0};FH.addPoints(a.to,-a.stars);delete t.awarded};
+const refundPenalty=t=>{if(t.penaltyApplied){FH.addPoints(t.assignee,Number(t.penalty)||0);t.penaltyApplied=false}};
+const fmtDate=d=>{const x=new Date(d+'T00:00');return isNaN(x)?d:x.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})};
+const fmtTime=t=>{const x=new Date('1970-01-01T'+t);return isNaN(x)?t:x.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})};
+
+function renderTasks(){
   const list=$('task-list');list.replaceChildren();
-  const tasks=Object.entries(state.tasks).map(([id,t])=>({id,...t})).filter(t=>filter==='All'||t.assignee===filter)
-    .sort((a,b)=>(a.completed-b.completed)||`${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+  const tasks=Object.entries(FH.state.tasks).map(([id,t])=>({id,...t})).filter(t=>who==='All'||t.assignee===who).sort((a,b)=>(a.completed-b.completed)||`${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
   const done=tasks.filter(t=>t.completed).length;
-  $('progress-bar').style.width=(tasks.length?Math.round(done/tasks.length*100):0)+'%';
-  $('progress-label').textContent=`${done} of ${tasks.length} tasks complete`;
-  if(!tasks.length){list.innerHTML='<div class="empty">No tasks yet. Tap “+ Add task” to create one.</div>';return}
+  $('progress-bar').style.width=(tasks.length?Math.round(done/tasks.length*100):0)+'%';$('progress-label').textContent=`${done} of ${tasks.length} tasks complete`;
+  if(!tasks.length){list.innerHTML='<div class="empty">No tasks. Tap “+ Add task”.</div>';return}
   const now=new Date();
-  tasks.forEach(t=>{
-    const late=!t.completed&&new Date(`${t.date}T${t.time||'23:59'}`)<now;
-    const row=document.createElement('div');row.className='task'+(t.completed?' done':'');row.style.cssText=mstyle(t.assignee);
-    row.innerHTML=`<input type="checkbox" ${t.completed?'checked':''} aria-label="Mark ${esc(t.title)} complete"><div class="tmain"><div class="ttitle">${esc(t.title)}</div><div class="tmeta"><span class="who">${esc(t.assignee)}</span> · ${esc(fmtDate(t.date))}, ${esc(fmtTime(t.time))}${late?' · <span class="late">Overdue</span>':''}</div></div><span class="tstars">★ ${Number(t.points)||1}</span><button type="button" class="pill edit" aria-label="Edit ${esc(t.title)}">✎</button><button type="button" class="pill del" aria-label="Delete ${esc(t.title)}">🗑</button>`;
-    row.querySelector('input').onchange=e=>toggle(t.id,e.target.checked);
-    row.querySelector('.edit').onclick=()=>openForm(t);
-    row.querySelector('.del').onclick=e=>ask(e.currentTarget,()=>del(t.id));
+  tasks.forEach(t=>{const p=Number(t.points)||0,pen=Number(t.penalty)||0,late=!t.completed&&t.date&&new Date(`${t.date}T${t.time||'23:59'}`)<now;
+    const row=document.createElement('div');row.className='row'+(t.completed?' done':'');row.style.cssText=mstyle(t.assignee);
+    row.innerHTML=`<input type="checkbox" ${t.completed?'checked':''} aria-label="Mark ${esc(t.title)} complete"><div class="tmain"><div class="ttitle">${esc(t.title)}</div><div class="tmeta"><span class="who">${esc(t.assignee)}</span> · ${esc(fmtDate(t.date))}, ${esc(fmtTime(t.time||'09:00'))}${late?' · <span class="late">Overdue</span>':''}<br><span class="pp">${signed(p)} ★ when done</span>${pen>0?` · <span class="pn">−${pen} ★ if not done</span>`:''}</div></div><button type="button" class="pill edit" aria-label="Edit ${esc(t.title)}">✎</button><button type="button" class="pill del" aria-label="Delete ${esc(t.title)}">🗑</button>`;
+    row.querySelector('input').onchange=e=>toggleTask(t.id,e.target.checked);
+    row.querySelector('.edit').onclick=()=>openTask(t);
+    row.querySelector('.del').onclick=e=>FH.ask(e.currentTarget,()=>delTask(t.id));
     list.append(row)})}
+function toggleTask(id,checked){const t=FH.state.tasks[id];if(!t)return;
+  if(checked&&!t.completed){refundPenalty(t);t.completed=true;award(t);msg(`${t.assignee} ${signed(t.awarded.stars)} ★`)}
+  else if(!checked&&t.completed){refundAward(t);t.completed=false;msg('Task reopened; points taken back.')}
+  FH.save();FH.settle();render()}
+function openTask(t){closeRoutine();editTask=t?t.id:null;
+  $('tf-title-in').value=t?t.title:'';$('tf-assignee').value=t?t.assignee:(who!=='All'?who:'Arun');$('tf-points').value=t?(t.points??10):10;$('tf-pen').value=t?(t.penalty||0):0;$('tf-date').value=t?t.date:FH.today();$('tf-time').value=t?(t.time||'09:00'):'09:00';
+  $('tf-title').textContent=t?'Edit task':'Add task';$('tf-save').textContent=t?'Save changes':'Add task';
+  $('task-form-card').classList.remove('hidden');$('task-form-card').scrollIntoView({behavior:'smooth',block:'start'});$('tf-title-in').focus()}
+function closeTask(){editTask=null;$('task-form-card').classList.add('hidden')}
+$('task-form').addEventListener('submit',e=>{e.preventDefault();
+  const title=$('tf-title-in').value.trim(),points=int($('tf-points').value),pen=int($('tf-pen').value),date=$('tf-date').value||FH.today(),time=$('tf-time').value||'09:00',assignee=$('tf-assignee').value;
+  if(!title||points===null||pen===null||pen<0){msg('Enter a task name and whole numbers for the points.');return}
+  const s=FH.state;
+  if(editTask){const t=s.tasks[editTask];if(!t){closeTask();return}const was=t.completed;refundPenalty(t);if(was)refundAward(t);Object.assign(t,{title,points,penalty:pen,date,time,assignee});if(was)award(t);msg(`Updated “${title}”.`)}
+  else{s.tasks[FH.uid('task')]={title,points,penalty:pen,date,time,assignee,completed:false};msg(`Added “${title}” for ${assignee}.`)}
+  FH.save();FH.settle();closeTask();render()});
+$('tf-cancel').onclick=closeTask;$('add-task').onclick=()=>openTask();
+function delTask(id){const t=FH.state.tasks[id];if(!t)return;refundPenalty(t);if(t.completed)refundAward(t);delete FH.state.tasks[id];if(editTask===id)closeTask();FH.save();msg(`Deleted “${t.title}”.`);render()}
 
-MEMBERS.forEach(m=>{const o=document.createElement('option');o.value=m.name;o.textContent=m.name;$('f-assignee').append(o)});
-try{if(localStorage.getItem('family-dashboard-theme')==='dark')document.body.classList.add('dark')}catch(e){}
-$('theme').onclick=()=>{const d=document.body.classList.toggle('dark');try{localStorage.setItem('family-dashboard-theme',d?'dark':'light')}catch(e){}};
-const resync=()=>{if($('form-card').classList.contains('hidden')){state=readState();render()}};
-window.addEventListener('storage',e=>{if(e.key===KEY)resync()});window.addEventListener('focus',resync);
-render();
+/* ===== wiring ===== */
+function render(){renderFilters();renderRoutines();renderTasks()}
+MEMBERS.forEach(m=>{[$('rf-member'),$('tf-assignee')].forEach(sel=>{const o=document.createElement('option');o.value=m.name;o.textContent=m.name;sel.append(o)})});
+SECTIONS.forEach(sec=>{const o=document.createElement('option');o.value=sec;o.textContent=sec;$('rf-section').append(o)});
+FH.mountTabbar('routines',{plus:()=>openRoutine(),plusLabel:'Add routine'});
+FH.onChange(()=>{if($('routine-form-card').classList.contains('hidden')&&$('task-form-card').classList.contains('hidden')){FH.load();seedTasks();render()}});
+window.addEventListener('hashchange',()=>{readHash();render()});
+seedTasks();readHash();render();
 </script>
 </body>
 </html>

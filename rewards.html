@@ -2,153 +2,175 @@
 <html lang="en">
 <head>
   <script src="sync.js"></script>
+  <script src="common.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Manage family rewards and redeem stars">
+  <meta name="description" content="Manage family rewards, points and redeem stars">
   <title>Family Rewards</title>
   <style>
-    :root{--bg:#eef1f6;--card:#fff;--text:#192230;--muted:#8592a5;--blue:#4f72be;--border:#e3e8f0;--shadow:0 1px 3px #1b2a4a14,0 4px 12px #1b2a4a0d;--track:#dfe5ee;--ink:#17243a}
+    :root{--bg:#eef1f6;--card:#fff;--text:#192230;--muted:#8592a5;--blue:#4f72be;--border:#e3e8f0;--shadow:0 1px 3px #1b2a4a14,0 4px 12px #1b2a4a0d;--track:#dfe5ee;--ink:#17243a;--red:#d64545}
     body.dark{--bg:#101826;--card:#1a2436;--text:#e8edf5;--muted:#8d9bb2;--border:#27344b;--shadow:0 1px 3px #0006;--track:#2b3a54;--ink:#e8edf5}
     *{box-sizing:border-box}
     body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     main{width:100%;max-width:900px;margin:auto;padding:24px clamp(12px,3vw,32px) 110px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-    h1{font:clamp(24px,3vw,32px) Georgia,serif;margin:0}h2{font-size:18px;margin:0}
-    .subtitle,.muted{color:var(--muted);font-size:13px;margin-top:6px}
-    .chip{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:clamp(14px,2vw,20px);margin-bottom:18px;box-shadow:var(--shadow)}
-    .button{border:0;border-radius:8px;padding:10px 14px;background:var(--ink);color:var(--bg);font-weight:700;cursor:pointer;font:inherit;font-weight:700;font-size:14px}
+    .topbar{margin-bottom:14px}
+    h1{font:clamp(24px,3vw,32px) Georgia,serif;margin:0}h2{font-size:17px;margin:0}h3{font-size:13px;margin:16px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .sub,.muted{color:var(--muted);font-size:13px;margin-top:6px}
+    .button{border:0;border-radius:8px;padding:10px 14px;background:var(--ink);color:var(--bg);font:inherit;font-weight:700;font-size:14px;cursor:pointer}
     .button.secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
-    .person-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:clamp(14px,2vw,20px);margin-bottom:18px;box-shadow:var(--shadow)}
+    .person-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
     .person-tab{border:1px solid var(--member);border-radius:20px;padding:7px 13px;background:var(--card);color:var(--member);cursor:pointer;font:inherit;font-weight:700;font-size:14px}
     .person-tab.active{background:var(--member);color:#fff}
-    .rhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+    .rhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;flex-wrap:wrap}
     .rhead h2 b{color:var(--member)}
-    .reward-list{display:grid}
     .reward{display:flex;align-items:center;gap:10px;padding:11px 2px;border-top:1px solid var(--border)}
-    .reward:first-child{border-top:0}
+    .reward:first-of-type{border-top:0}
     .ricon{font-size:22px;width:34px;text-align:center;flex:none}
     .reward-name{flex:1;font-weight:650;min-width:0;overflow-wrap:anywhere}
-    .cost{width:72px;padding:7px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-weight:700;text-align:right}
+    .num{width:78px;padding:7px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-weight:700;text-align:right}
     .pill{border:0;border-radius:8px;padding:8px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:var(--bg);color:var(--muted)}
     .pill.goal.on{background:var(--member);color:#fff}
-    .pill.redeem{background:var(--ink);color:var(--bg)}
-    .pill:disabled{opacity:.4;cursor:not-allowed}
-    .pill.icon{padding:8px 9px}
+    .pill.redeem,.pill.give{background:var(--ink);color:var(--bg)}
+    .pill:disabled{opacity:.4;cursor:not-allowed}.pill.icon{padding:8px 9px}
     .actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
-    .form-row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+    .pos{color:#2f9d72}.neg{color:var(--red)}
+    .form-row{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:12px}
     .form-row label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--muted)}
-    input{min-width:0;border:1px solid var(--border);border-radius:8px;padding:9px;background:var(--bg);color:var(--text);font:inherit}
-    .name-input{min-width:190px}.star-input{width:90px}.icon-input{width:64px;text-align:center}
-    .empty{padding:18px 4px;color:var(--muted)}
-    .message{min-height:20px;color:var(--muted);font-size:13px;margin:10px 0 0}
-    .history{font-size:14px;color:var(--muted);padding-left:20px}.history li{margin:6px 0}
+    input,select{min-width:0;border:1px solid var(--border);border-radius:8px;padding:9px;background:var(--bg);color:var(--text);font:inherit}
+    .name-input{min-width:170px;flex:1}.star-input{width:90px}.icon-input{width:64px;text-align:center}
+    .hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+    .empty{padding:14px 2px;color:var(--muted);font-size:14px}
+    .message{min-height:20px;color:var(--muted);font-size:13px;margin:0 0 14px}
+    .history{font-size:14px;color:var(--muted);padding-left:20px;margin:8px 0 0}.history li{margin:6px 0}
     .hidden{display:none!important}
-    .tabbar{position:fixed;z-index:20;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:4px;padding:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 28px #1b2a4a30;width:min(600px,calc(100% - 20px))}
-    .tabbar a{flex:1;display:grid;justify-items:center;gap:2px;padding:7px 4px;border-radius:14px;color:var(--muted);text-decoration:none;font-size:11px;font-weight:600}
-    .tabbar a span{font-size:18px;line-height:1}
-    .tabbar a.active{background:#17243a;color:#fff}
-    .tabbar .plus{flex:none;width:46px;height:46px;border-radius:14px;background:#c8553d;color:#fff;border:0;font-size:26px;cursor:pointer}
-    @media(max-width:620px){.reward{flex-wrap:wrap}.reward-name{min-width:calc(100% - 100px)}.actions{margin-left:auto}.name-input{min-width:0;width:100%}.form-row>label:nth-child(2){flex:1}}
+    @media(max-width:620px){.reward{flex-wrap:wrap}.reward-name{min-width:calc(100% - 100px)}.actions{margin-left:auto}.name-input{width:100%}input,select{font-size:16px}}
   </style>
 </head>
 <body>
 <main>
-  <header class="topbar"><div><h1>Rewards</h1><div class="subtitle">Add, edit and redeem rewards for each person with stars.</div></div><div><a class="chip" href="index.html">← Dashboard</a> <button class="chip" id="theme" type="button" aria-label="Toggle dark mode">🌙</button></div></header>
-
+  <header class="topbar"><h1>Rewards</h1><div class="sub">Redeem stars, set goals, and add or remove points.</div></header>
   <div class="person-tabs" id="person-tabs" role="tablist" aria-label="Choose a family member"></div>
+  <p class="message" id="message" role="status" aria-live="polite"></p>
 
   <section class="card" id="person-card">
     <div class="rhead"><h2 id="rewards-title"></h2></div>
-    <div class="reward-list" id="reward-list"></div>
-  </section>
-
-  <section class="card" id="form-card">
-    <h2 id="form-title" style="margin-bottom:12px">Add a reward</h2>
+    <div id="reward-list"></div>
+    <h3 id="rform-title">Add a reward</h3>
     <form class="form-row" id="reward-form">
-      <label>Icon<input class="icon-input" id="reward-icon" maxlength="4" placeholder="🎁" value="🎁"></label>
-      <label>Reward name<input class="name-input" id="reward-name" maxlength="80" placeholder="e.g. Choose a family movie" required></label>
+      <label>Icon<input class="icon-input" id="reward-icon" maxlength="4" value="🎁"></label>
+      <label style="flex:1">Reward name<input class="name-input" id="reward-name" maxlength="80" placeholder="e.g. Choose a family movie" required></label>
       <label>Stars<input class="star-input" id="reward-stars" type="number" min="1" max="100000" value="10" required></label>
       <button class="button" id="save-button" type="submit">Add reward</button>
       <button class="button secondary hidden" id="cancel-edit" type="button">Cancel</button>
     </form>
-    <p class="message" id="message" role="status" aria-live="polite"></p>
   </section>
 
-  <section class="card"><h2>Recent redemptions</h2><ul class="history" id="history"></ul></section>
-</main>
+  <section class="card" id="points-card">
+    <div class="rhead"><h2 id="points-title">Add or remove points</h2></div>
+    <div class="muted">Tap <b>Give</b> to add (or remove, if negative) a task's points for the person selected above.</div>
+    <div id="action-list"></div>
+    <h3 id="aform-title">Add a points task</h3>
+    <form class="form-row" id="action-form">
+      <label>Icon<input class="icon-input" id="action-icon" maxlength="4" value="⭐"></label>
+      <label style="flex:1">Task name<input class="name-input" id="action-name" maxlength="60" placeholder="e.g. Helped with dishes" required></label>
+      <label>Points<input class="star-input" id="action-points" type="number" step="1" value="5" required></label>
+      <button class="button" id="action-save" type="submit">Add task</button>
+      <button class="button secondary hidden" id="action-cancel" type="button">Cancel</button>
+    </form>
+    <p class="hint">Use a negative number (like −3) for tasks that take points away.</p>
+    <h3>Manual adjustment</h3>
+    <form class="form-row" id="adjust-form">
+      <label>Points<input class="star-input" id="adj-points" type="number" step="1" placeholder="+5 or −5" required></label>
+      <label style="flex:1">Reason (optional)<input class="name-input" id="adj-reason" maxlength="60" placeholder="e.g. Great report card"></label>
+      <button class="button" id="adj-save" type="submit">Apply</button>
+    </form>
+    <p class="hint">A negative number removes points. Balances can go below zero.</p>
+  </section>
 
-<nav class="tabbar" aria-label="Main navigation">
-  <a href="index.html"><span>◫</span>Today</a>
-  <a href="calendar.html"><span>▦</span>Calendar</a>
-  <a href="tasks.html"><span>✓</span>Routines</a>
-  <a href="recipes.html"><span>🍽</span>Meals</a>
-  <a class="active" href="rewards.html"><span>★</span>Rewards</a>
-  <button class="plus" type="button" aria-label="Add a reward" onclick="document.getElementById('reward-name').focus()">+</button>
-</nav>
+  <section class="card"><h2>Recent activity</h2><ul class="history" id="history"></ul></section>
+</main>
+<nav id="tabbar"></nav>
 
 <script>
-const KEY='family-dashboard-rewards-v1';
-const MEMBERS=[{name:'Arun',color:'#4f72be'},{name:'Jaisy',color:'#d55f91'},{name:'Joanna',color:'#2f9d72'},{name:'Joshua',color:'#d97706'}];
-const SEED=[['dessert','🍦','Choose Dessert',30],['screen','🎮','30 min Extra Screen Time',40],['movie','🎬','Pick Family Movie Night',60],['late','🌙','Stay Up 30 min Late',80],['outing','🚗','One-on-One Outing',120],['toy','🧸','$10 Toy Budget',150]];
-let selectedPerson=MEMBERS[0].name,editingId=null;
-function readState(){try{const s=JSON.parse(localStorage.getItem(KEY)||'{}');return s&&typeof s==='object'?s:{}}catch(e){console.warn(e);return{}}}
-let state=readState();
-function ensureState(){
-  if(!state.points||typeof state.points!=='object')state.points={};
-  if(!state.tasks||typeof state.tasks!=='object')state.tasks={};
-  if(!state.rewards||typeof state.rewards!=='object')state.rewards={};
-  if(!state.goals||typeof state.goals!=='object')state.goals={};
-  if(!Array.isArray(state.history))state.history=[];
-  MEMBERS.forEach(m=>{state.points[m.name]=Math.max(0,Number(state.points[m.name])||0);if(!Array.isArray(state.rewards[m.name]))state.rewards[m.name]=SEED.map(([id,icon,name,stars])=>({id,icon,name,stars}))})}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){console.error(e);msg('Could not save changes in this browser.')}}
-const $=id=>document.getElementById(id),msg=t=>$('message').textContent=t;
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const member=()=>MEMBERS.find(m=>m.name===selectedPerson)||MEMBERS[0];
+const {MEMBERS,esc,signed,byName}=FH;
+const $=id=>document.getElementById(id);
+let selected=MEMBERS[0].name,editingReward=null,editingAction=null;
+const msg=t=>$('message').textContent=t;
 const mstyle=m=>`--member:${m.color};--member-bg:${m.color}18`;
+const member=()=>byName[selected];
+const int=v=>{const n=Number(v);return Number.isInteger(n)&&Math.abs(n)<=100000?n:null};
+const bal=()=>FH.state.points[selected]||0;
+const fmtBal=n=>n<0?'−'+Math.abs(n):String(n);
 
-function renderTabs(){const box=$('person-tabs');box.replaceChildren();MEMBERS.forEach(m=>{const b=document.createElement('button');b.type='button';b.className='person-tab'+(m.name===selectedPerson?' active':'');b.style.cssText=mstyle(m);b.textContent=`${m.name} · ★ ${state.points[m.name]}`;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(m.name===selectedPerson));b.onclick=()=>{selectedPerson=m.name;resetForm();msg('');render()};box.append(b)})}
+function renderTabs(){const box=$('person-tabs');box.replaceChildren();MEMBERS.forEach(m=>{const b=document.createElement('button');b.type='button';b.className='person-tab'+(m.name===selected?' active':'');b.style.cssText=mstyle(m);b.textContent=`${m.name} · ★ ${fmtBal(FH.state.points[m.name]||0)}`;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(m.name===selected));b.onclick=()=>{selected=m.name;resetReward();resetAction();msg('');render()};box.append(b)})}
 
+/* ===== rewards (redeem, goal, add / edit / delete, edit star cost) ===== */
 function renderRewards(){
-  const m=member(),list=$('reward-list'),rewards=state.rewards[m.name],bal=state.points[m.name];
-  $('person-card').style.cssText=mstyle(m);$('form-card').style.cssText=mstyle(m);
-  $('rewards-title').innerHTML=`${esc(m.name)}'s Rewards · <b>★ ${bal}</b>`;
+  const m=member(),s=FH.state,list=$('reward-list'),rewards=s.rewards[m.name];
+  $('person-card').style.cssText=mstyle(m);$('points-card').style.cssText=mstyle(m);
+  $('rewards-title').innerHTML=`${esc(m.name)}'s Rewards · <b>★ ${fmtBal(bal())}</b>`;
   list.replaceChildren();
   if(!rewards.length){list.innerHTML=`<div class="empty">No rewards for ${esc(m.name)} yet. Add one below.</div>`;return}
   rewards.forEach(r=>{
-    const isGoal=state.goals[m.name]===r.id,row=document.createElement('div');row.className='reward';
+    const isGoal=s.goals[m.name]===r.id,row=document.createElement('div');row.className='reward';
     row.innerHTML=`<span class="ricon">${esc(r.icon||'🎁')}</span><div class="reward-name">${esc(r.name)}</div>
-      <input class="cost" type="number" min="1" max="100000" value="${r.stars}" aria-label="Star cost for ${esc(r.name)}">
-      <div class="actions"><button type="button" class="pill goal${isGoal?' on':''}">${isGoal?'🎯 Goal':'Set goal'}</button><button type="button" class="pill redeem"${bal<r.stars?' disabled':''}>Redeem</button><button type="button" class="pill icon edit" aria-label="Edit ${esc(r.name)}">✎</button><button type="button" class="pill icon del" aria-label="Delete ${esc(r.name)}">🗑</button></div>`;
-    row.querySelector('.cost').onchange=e=>{const v=Number(e.target.value);if(!Number.isInteger(v)||v<1||v>100000){e.target.value=r.stars;msg('Star cost must be a whole number from 1 to 100000.');return}r.stars=v;save();msg(`${r.name} now costs ${v} stars.`);render()};
-    row.querySelector('.goal').onclick=()=>{if(isGoal)delete state.goals[m.name];else state.goals[m.name]=r.id;save();msg(isGoal?'Goal cleared.':`Goal set: ${r.name}.`);render()};
-    row.querySelector('.redeem').onclick=()=>redeem(m.name,r.id);
-    row.querySelector('.edit').onclick=()=>startEdit(r);
-    row.querySelector('.del').onclick=e=>ask(e.currentTarget,()=>del(m.name,r.id));
+      <input class="num cost" type="number" min="1" max="100000" value="${r.stars}" aria-label="Star cost for ${esc(r.name)}">
+      <div class="actions"><button type="button" class="pill goal${isGoal?' on':''}">${isGoal?'🎯 Goal':'Set goal'}</button><button type="button" class="pill redeem"${bal()<r.stars?' disabled':''}>Redeem</button><button type="button" class="pill icon edit" aria-label="Edit ${esc(r.name)}">✎</button><button type="button" class="pill icon del" aria-label="Delete ${esc(r.name)}">🗑</button></div>`;
+    row.querySelector('.cost').onchange=e=>{const v=int(e.target.value);if(v===null||v<1){e.target.value=r.stars;msg('Star cost must be a whole number of at least 1.');return}r.stars=v;FH.save();msg(`${r.name} now costs ${v} stars.`);render()};
+    row.querySelector('.goal').onclick=()=>{if(isGoal)delete s.goals[m.name];else s.goals[m.name]=r.id;FH.save();msg(isGoal?'Goal cleared.':`Goal set: ${r.name}.`);render()};
+    row.querySelector('.redeem').onclick=()=>redeem(r);
+    row.querySelector('.edit').onclick=()=>startReward(r);
+    row.querySelector('.del').onclick=e=>FH.ask(e.currentTarget,()=>delReward(r));
     list.append(row)})}
-
-function renderHistory(){const ul=$('history');ul.replaceChildren();const items=state.history.slice(-10).reverse();if(!items.length){ul.innerHTML='<li>No rewards redeemed yet.</li>';return}items.forEach(x=>{const li=document.createElement('li');const when=x.date?new Date(x.date).toLocaleDateString():'';li.textContent=`${x.member} redeemed “${x.reward}” for ${x.cost} stars${when?` · ${when}`:''}`;ul.append(li)})}
-function render(){ensureState();renderTabs();renderRewards();renderHistory()}
-
-function resetForm(){$('reward-form').reset();$('reward-icon').value='🎁';$('reward-stars').value='10';editingId=null;$('save-button').textContent='Add reward';$('form-title').textContent='Add a reward';$('cancel-edit').classList.add('hidden')}
-function startEdit(r){editingId=r.id;$('reward-icon').value=r.icon||'🎁';$('reward-name').value=r.name;$('reward-stars').value=r.stars;$('save-button').textContent='Save changes';$('form-title').textContent='Edit reward';$('cancel-edit').classList.remove('hidden');$('form-card').scrollIntoView({behavior:'smooth',block:'center'});$('reward-name').focus()}
-function ask(btn,fn){if(btn.dataset.armed){fn();return}btn.dataset.armed='1';const old=btn.textContent;btn.textContent='Delete?';btn.style.color='#d64545';btn.style.fontWeight='700';setTimeout(()=>{if(btn.isConnected){delete btn.dataset.armed;btn.textContent=old;btn.style.color='';btn.style.fontWeight=''}},3000)} // tap twice to delete (pop-up confirm() is blocked in published pages)
-function del(p,id){const r=state.rewards[p].find(x=>x.id===id);if(!r)return;state.rewards[p]=state.rewards[p].filter(x=>x.id!==id);if(state.goals[p]===id)delete state.goals[p];if(editingId===id)resetForm();save();msg(`Deleted ${r.name}.`);render()}
-function redeem(p,id){const r=state.rewards[p].find(x=>x.id===id);if(!r)return;const bal=state.points[p];if(bal<r.stars){msg(`${p} needs ${r.stars-bal} more stars for ${r.name}.`);return}state.points[p]=bal-r.stars;state.history.push({member:p,reward:r.name,cost:r.stars,date:new Date().toISOString()});if(state.goals[p]===id)delete state.goals[p];save();msg(`${p} redeemed ${r.name} for ${r.stars} stars.`);render()}
-
+function redeem(r){const s=FH.state,p=selected;if(bal()<r.stars){msg(`${p} needs ${r.stars-bal()} more stars for ${r.name}.`);return}
+  FH.addPoints(p,-r.stars);s.history.push({member:p,reward:r.name,cost:r.stars,date:new Date().toISOString()});if(s.goals[p]===r.id)delete s.goals[p];FH.save();msg(`${p} redeemed ${r.name} for ${r.stars} stars.`);render()}
+function resetReward(){$('reward-form').reset();$('reward-icon').value='🎁';$('reward-stars').value='10';editingReward=null;$('save-button').textContent='Add reward';$('rform-title').textContent='Add a reward';$('cancel-edit').classList.add('hidden')}
+function startReward(r){editingReward=r.id;$('reward-icon').value=r.icon||'🎁';$('reward-name').value=r.name;$('reward-stars').value=r.stars;$('save-button').textContent='Save changes';$('rform-title').textContent='Edit reward';$('cancel-edit').classList.remove('hidden');$('reward-form').scrollIntoView({behavior:'smooth',block:'center'});$('reward-name').focus()}
+function delReward(r){const s=FH.state;s.rewards[selected]=s.rewards[selected].filter(x=>x.id!==r.id);if(s.goals[selected]===r.id)delete s.goals[selected];if(editingReward===r.id)resetReward();FH.save();msg(`Deleted ${r.name}.`);render()}
 $('reward-form').addEventListener('submit',e=>{e.preventDefault();
-  const name=$('reward-name').value.trim(),icon=$('reward-icon').value.trim()||'🎁',stars=Number($('reward-stars').value);
-  if(!name||!Number.isInteger(stars)||stars<1||stars>100000){msg('Enter a reward name and a whole-number star cost of at least 1.');return}
-  const list=state.rewards[selectedPerson];
-  if(editingId){const r=list.find(x=>x.id===editingId);if(!r)return;Object.assign(r,{name,icon,stars});msg(`Updated ${name}.`)}
-  else{list.push({id:`reward-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,icon,name,stars});msg(`Added ${name} to ${selectedPerson}'s rewards.`)}
-  save();resetForm();render()});
-$('cancel-edit').onclick=resetForm;
+  const name=$('reward-name').value.trim(),icon=$('reward-icon').value.trim()||'🎁',stars=int($('reward-stars').value);
+  if(!name||stars===null||stars<1){msg('Enter a reward name and a whole-number star cost of at least 1.');return}
+  const list=FH.state.rewards[selected];
+  if(editingReward){const r=list.find(x=>x.id===editingReward);if(!r)return;Object.assign(r,{name,icon,stars});msg(`Updated ${name}.`)}
+  else{list.push({id:FH.uid('reward'),icon,name,stars});msg(`Added ${name} to ${selected}'s rewards.`)}
+  FH.save();resetReward();render()});
+$('cancel-edit').onclick=resetReward;
 
-try{if(localStorage.getItem('family-dashboard-theme')==='dark')document.body.classList.add('dark')}catch(e){}
-$('theme').onclick=()=>{const d=document.body.classList.toggle('dark');try{localStorage.setItem('family-dashboard-theme',d?'dark':'light')}catch(e){}};
-window.addEventListener('storage',e=>{if(e.key===KEY){state=readState();render()}});
-window.addEventListener('focus',()=>{state=readState();render()});
+/* ===== points tasks (add / edit / delete) + manual adjustment ===== */
+function renderActions(){
+  const list=$('action-list');list.replaceChildren();$('points-title').textContent=`Add or remove points for ${selected}`;
+  const acts=FH.state.pointActions;
+  if(!acts.length){list.innerHTML='<div class="empty">No points tasks yet. Add one below.</div>';return}
+  acts.forEach(a=>{const row=document.createElement('div');row.className='reward';const p=Number(a.points)||0;
+    row.innerHTML=`<span class="ricon">${esc(a.icon||'⭐')}</span><div class="reward-name">${esc(a.name)}</div>
+      <input class="num pts ${p<0?'neg':'pos'}" type="number" step="1" value="${p}" aria-label="Points for ${esc(a.name)}">
+      <div class="actions"><button type="button" class="pill give">Give</button><button type="button" class="pill icon edit" aria-label="Edit ${esc(a.name)}">✎</button><button type="button" class="pill icon del" aria-label="Delete ${esc(a.name)}">🗑</button></div>`;
+    row.querySelector('.pts').onchange=e=>{const v=int(e.target.value);if(v===null){e.target.value=a.points;msg('Points must be a whole number.');return}a.points=v;FH.save();msg(`${a.name} is now ${signed(v)} points.`);render()};
+    row.querySelector('.give').onclick=()=>{const v=Number(a.points)||0;FH.adjust(selected,v,a.name);msg(`${selected} ${signed(v)} ★ for ${a.name}.`);render()};
+    row.querySelector('.edit').onclick=()=>startAction(a);
+    row.querySelector('.del').onclick=e=>FH.ask(e.currentTarget,()=>delAction(a));
+    list.append(row)})}
+function resetAction(){$('action-form').reset();$('action-icon').value='⭐';$('action-points').value='5';editingAction=null;$('action-save').textContent='Add task';$('aform-title').textContent='Add a points task';$('action-cancel').classList.add('hidden')}
+function startAction(a){editingAction=a.id;$('action-icon').value=a.icon||'⭐';$('action-name').value=a.name;$('action-points').value=a.points;$('action-save').textContent='Save changes';$('aform-title').textContent='Edit points task';$('action-cancel').classList.remove('hidden');$('action-form').scrollIntoView({behavior:'smooth',block:'center'});$('action-name').focus()}
+function delAction(a){FH.state.pointActions=FH.state.pointActions.filter(x=>x.id!==a.id);if(editingAction===a.id)resetAction();FH.save();msg(`Deleted ${a.name}.`);render()}
+$('action-form').addEventListener('submit',e=>{e.preventDefault();
+  const name=$('action-name').value.trim(),icon=$('action-icon').value.trim()||'⭐',points=int($('action-points').value);
+  if(!name||points===null){msg('Enter a task name and a whole number of points.');return}
+  const acts=FH.state.pointActions;
+  if(editingAction){const a=acts.find(x=>x.id===editingAction);if(!a)return;Object.assign(a,{name,icon,points});msg(`Updated ${name}.`)}
+  else{acts.push({id:FH.uid('a'),icon,name,points});msg(`Added ${name} (${signed(points)}).`)}
+  FH.save();resetAction();render()});
+$('action-cancel').onclick=resetAction;
+$('adjust-form').addEventListener('submit',e=>{e.preventDefault();const v=int($('adj-points').value);if(!v){msg('Enter a whole number other than 0.');return}
+  FH.adjust(selected,v,$('adj-reason').value.trim());msg(`${selected} ${signed(v)} ★ applied.`);$('adjust-form').reset();render()});
+
+function renderHistory(){const ul=$('history');ul.replaceChildren();const items=FH.state.history.slice(-15).reverse();if(!items.length){ul.innerHTML='<li>Nothing yet.</li>';return}items.forEach(h=>{const li=document.createElement('li');li.textContent=FH.describe(h);ul.append(li)})}
+function render(){renderTabs();renderRewards();renderActions();renderHistory()}
+
+FH.mountTabbar('rewards',{plus:()=>$('reward-name').focus(),plusLabel:'Add a reward'});
+const editing=()=>editingReward||editingAction||$('reward-name').value||$('action-name').value||$('adj-points').value;
+FH.onChange(()=>{if(!editing()){FH.load();render()}});
 render();
 </script>
 </body>
