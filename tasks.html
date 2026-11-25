@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="sync.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Family tasks, assignments, dates, and rewards">
@@ -137,9 +138,10 @@ $('task-form').addEventListener('submit',e=>{e.preventDefault();
 $('f-cancel').onclick=closeForm;
 $('add-task').onclick=()=>openForm();
 
+function ask(btn,fn){if(btn.dataset.armed){fn();return}btn.dataset.armed='1';const old=btn.textContent;btn.textContent='Delete?';btn.style.color='#d64545';btn.style.fontWeight='700';setTimeout(()=>{if(btn.isConnected){delete btn.dataset.armed;btn.textContent=old;btn.style.color='';btn.style.fontWeight=''}},3000)} // tap twice to delete (pop-up confirm() is blocked in published pages)
 // UPDATE (complete) / DELETE
 function toggle(id,checked){const t=state.tasks[id];if(!t)return;if(checked&&!t.completed){t.completed=true;award(t);msg(`${t.assignee} earned ${t.awarded.stars} stars.`)}else if(!checked&&t.completed){refund(t);t.completed=false;msg('Task reopened; stars removed.')}save();render()}
-function del(id){const t=state.tasks[id];if(!t||!confirm(`Delete “${t.title}”?`))return;if(t.completed)refund(t);delete state.tasks[id];if(editingId===id)closeForm();save();msg(`Deleted “${t.title}”.`);render()}
+function del(id){const t=state.tasks[id];if(!t)return;if(t.completed)refund(t);delete state.tasks[id];if(editingId===id)closeForm();save();msg(`Deleted “${t.title}”.`);render()}
 
 // READ
 function fmtDate(d){const x=new Date(d+'T00:00');return isNaN(x)?d:x.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})}
@@ -161,7 +163,7 @@ function render(){
     row.innerHTML=`<input type="checkbox" ${t.completed?'checked':''} aria-label="Mark ${esc(t.title)} complete"><div class="tmain"><div class="ttitle">${esc(t.title)}</div><div class="tmeta"><span class="who">${esc(t.assignee)}</span> · ${esc(fmtDate(t.date))}, ${esc(fmtTime(t.time))}${late?' · <span class="late">Overdue</span>':''}</div></div><span class="tstars">★ ${Number(t.points)||1}</span><button type="button" class="pill edit" aria-label="Edit ${esc(t.title)}">✎</button><button type="button" class="pill del" aria-label="Delete ${esc(t.title)}">🗑</button>`;
     row.querySelector('input').onchange=e=>toggle(t.id,e.target.checked);
     row.querySelector('.edit').onclick=()=>openForm(t);
-    row.querySelector('.del').onclick=()=>del(t.id);
+    row.querySelector('.del').onclick=e=>ask(e.currentTarget,()=>del(t.id));
     list.append(row)})}
 
 MEMBERS.forEach(m=>{const o=document.createElement('option');o.value=m.name;o.textContent=m.name;$('f-assignee').append(o)});

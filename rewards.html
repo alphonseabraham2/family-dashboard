@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="sync.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Manage family rewards and redeem stars">
@@ -123,7 +124,7 @@ function renderRewards(){
     row.querySelector('.goal').onclick=()=>{if(isGoal)delete state.goals[m.name];else state.goals[m.name]=r.id;save();msg(isGoal?'Goal cleared.':`Goal set: ${r.name}.`);render()};
     row.querySelector('.redeem').onclick=()=>redeem(m.name,r.id);
     row.querySelector('.edit').onclick=()=>startEdit(r);
-    row.querySelector('.del').onclick=()=>del(m.name,r.id);
+    row.querySelector('.del').onclick=e=>ask(e.currentTarget,()=>del(m.name,r.id));
     list.append(row)})}
 
 function renderHistory(){const ul=$('history');ul.replaceChildren();const items=state.history.slice(-10).reverse();if(!items.length){ul.innerHTML='<li>No rewards redeemed yet.</li>';return}items.forEach(x=>{const li=document.createElement('li');const when=x.date?new Date(x.date).toLocaleDateString():'';li.textContent=`${x.member} redeemed “${x.reward}” for ${x.cost} stars${when?` · ${when}`:''}`;ul.append(li)})}
@@ -131,7 +132,8 @@ function render(){ensureState();renderTabs();renderRewards();renderHistory()}
 
 function resetForm(){$('reward-form').reset();$('reward-icon').value='🎁';$('reward-stars').value='10';editingId=null;$('save-button').textContent='Add reward';$('form-title').textContent='Add a reward';$('cancel-edit').classList.add('hidden')}
 function startEdit(r){editingId=r.id;$('reward-icon').value=r.icon||'🎁';$('reward-name').value=r.name;$('reward-stars').value=r.stars;$('save-button').textContent='Save changes';$('form-title').textContent='Edit reward';$('cancel-edit').classList.remove('hidden');$('form-card').scrollIntoView({behavior:'smooth',block:'center'});$('reward-name').focus()}
-function del(p,id){const r=state.rewards[p].find(x=>x.id===id);if(!r||!confirm(`Delete “${r.name}” from ${p}'s rewards?`))return;state.rewards[p]=state.rewards[p].filter(x=>x.id!==id);if(state.goals[p]===id)delete state.goals[p];if(editingId===id)resetForm();save();msg(`Deleted ${r.name}.`);render()}
+function ask(btn,fn){if(btn.dataset.armed){fn();return}btn.dataset.armed='1';const old=btn.textContent;btn.textContent='Delete?';btn.style.color='#d64545';btn.style.fontWeight='700';setTimeout(()=>{if(btn.isConnected){delete btn.dataset.armed;btn.textContent=old;btn.style.color='';btn.style.fontWeight=''}},3000)} // tap twice to delete (pop-up confirm() is blocked in published pages)
+function del(p,id){const r=state.rewards[p].find(x=>x.id===id);if(!r)return;state.rewards[p]=state.rewards[p].filter(x=>x.id!==id);if(state.goals[p]===id)delete state.goals[p];if(editingId===id)resetForm();save();msg(`Deleted ${r.name}.`);render()}
 function redeem(p,id){const r=state.rewards[p].find(x=>x.id===id);if(!r)return;const bal=state.points[p];if(bal<r.stars){msg(`${p} needs ${r.stars-bal} more stars for ${r.name}.`);return}state.points[p]=bal-r.stars;state.history.push({member:p,reward:r.name,cost:r.stars,date:new Date().toISOString()});if(state.goals[p]===id)delete state.goals[p];save();msg(`${p} redeemed ${r.name} for ${r.stars} stars.`);render()}
 
 $('reward-form').addEventListener('submit',e=>{e.preventDefault();
