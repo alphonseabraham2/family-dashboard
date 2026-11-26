@@ -48,6 +48,7 @@
     .detail ul,.detail ol{margin:0;padding-left:20px}.detail li{margin:3px 0}
     .ract{display:flex;gap:6px;margin-top:auto}
     .ract .plan{background:var(--ink);color:var(--bg)}
+    a.pill{text-decoration:none;display:inline-block}.ract .link{color:var(--blue)}
     .form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
     .form-row label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--muted);min-width:0}
     .wide{grid-column:1/-1}
@@ -95,6 +96,7 @@
       <label>Minutes<input id="r-min" type="number" min="0" max="1440" value="30"></label>
       <label class="wide">Ingredients (one per line)<textarea id="r-ing"></textarea></label>
       <label class="wide">Instructions (one step per line)<textarea id="r-steps"></textarea></label>
+      <label class="wide">Instagram or Facebook link (optional)<input id="r-link" type="url" inputmode="url" placeholder="https://www.instagram.com/reel/..."></label>
       <div class="actions"><button class="button" id="r-save" type="submit">Add recipe</button><button class="button secondary" id="r-cancel" type="button">Cancel</button></div>
     </form>
   </section>
@@ -185,6 +187,11 @@ $('plan-form').addEventListener('submit',e=>{e.preventDefault();
   closePlan()});
 $('p-cancel').onclick=closePlan;
 
+/* ---------- links to Instagram / Facebook (only http/https links are accepted) ---------- */
+function linkInfo(u){try{const x=new URL(u);if(!/^https?:$/.test(x.protocol))return null;const h=x.hostname.replace(/^www\./,'');let name='Link';
+  if(/(^|\.)instagram\.com$/.test(h)||h==='instagr.am')name='Instagram';else if(/(^|\.)(facebook|fb)\.com$/.test(h)||h==='fb.watch')name='Facebook';
+  return{url:x.href,name}}catch(e){return null}}
+
 /* ---------- recipes (read) ---------- */
 function renderCats(){const box=$('cats');box.replaceChildren();['All',...CATS].forEach(c=>{const b=document.createElement('button');b.type='button';b.className='chip'+(c===cat?' on':'');b.textContent=c;b.setAttribute('aria-pressed',String(c===cat));b.onclick=()=>{cat=c;render()};box.append(b)})}
 function renderRecipes(){
@@ -192,10 +199,10 @@ function renderRecipes(){
   const list=state.recipes.filter(r=>(cat==='All'||r.category===cat)&&(!q||`${r.name} ${r.ingredients}`.toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name));
   $('count').textContent=`(${list.length}${list.length!==state.recipes.length?' of '+state.recipes.length:''})`;
   if(!list.length){grid.innerHTML=`<div class="empty">${state.recipes.length?'No recipes match.':'No recipes yet. Tap “+ Add recipe”.'}</div>`;return}
-  list.forEach(r=>{const open=expanded.has(r.id),el=document.createElement('article');el.className='recipe';el.id='recipe-'+r.id;
+  list.forEach(r=>{const open=expanded.has(r.id),lk=r.link?linkInfo(r.link):null,el=document.createElement('article');el.className='recipe';el.id='recipe-'+r.id;
     el.innerHTML=`<div class="rtop" role="button" tabindex="0" aria-expanded="${open}"><span class="ricon">${esc(r.icon||'🍽️')}</span><div><div class="rname">${esc(r.name)}</div><div class="rmeta">${esc(r.category)} · ${Number(r.minutes)||0} min · serves ${Number(r.servings)||1}</div></div></div>
       ${open?`<div class="detail"><h3>Ingredients</h3><ul>${lines(r.ingredients).map(x=>`<li>${esc(x)}</li>`).join('')||'<li>—</li>'}</ul><h3>Instructions</h3><ol>${lines(r.instructions).map(x=>`<li>${esc(x)}</li>`).join('')||'<li>—</li>'}</ol></div>`:''}
-      <div class="ract"><button type="button" class="pill plan">Plan meal</button><button type="button" class="pill edit" aria-label="Edit ${esc(r.name)}">✎ Edit</button><button type="button" class="pill del" aria-label="Delete ${esc(r.name)}">🗑</button></div>`;
+      <div class="ract">${lk?`<a class="pill link" href="${esc(lk.url)}" target="_blank" rel="noopener noreferrer">🔗 ${lk.name}</a>`:''}<button type="button" class="pill plan">Plan meal</button><button type="button" class="pill edit" aria-label="Edit ${esc(r.name)}">✎ Edit</button><button type="button" class="pill del" aria-label="Delete ${esc(r.name)}">🗑</button></div>`;
     const top=el.querySelector('.rtop'),tog=()=>{expanded.has(r.id)?expanded.delete(r.id):expanded.add(r.id);renderRecipes()};
     top.onclick=tog;top.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog()}};
     el.querySelector('.plan').onclick=()=>openPlan({recipeId:r.id});
@@ -205,13 +212,15 @@ function renderRecipes(){
 
 /* ---------- recipes (create / update / delete) ---------- */
 function openRecipe(r){closePlan();editingRecipe=r?r.id:null;
-  $('r-icon').value=r?r.icon:'🍽️';$('r-name').value=r?r.name:'';$('r-cat').value=r?r.category:'Dinner';$('r-serv').value=r?r.servings:4;$('r-min').value=r?r.minutes:30;$('r-ing').value=r?r.ingredients:'';$('r-steps').value=r?r.instructions:'';
+  $('r-icon').value=r?r.icon:'🍽️';$('r-name').value=r?r.name:'';$('r-cat').value=r?r.category:'Dinner';$('r-serv').value=r?r.servings:4;$('r-min').value=r?r.minutes:30;$('r-ing').value=r?r.ingredients:'';$('r-steps').value=r?r.instructions:'';$('r-link').value=r?(r.link||''):'';
   $('recipe-title').textContent=r?'Edit recipe':'Add recipe';$('r-save').textContent=r?'Save changes':'Add recipe';
   $('recipe-card').classList.remove('hidden');$('recipe-card').scrollIntoView({behavior:'smooth',block:'start'});$('r-name').focus()}
 function closeRecipe(){editingRecipe=null;$('recipe-card').classList.add('hidden');$('recipe-form').reset()}
 $('recipe-form').addEventListener('submit',e=>{e.preventDefault();
   const rec={name:$('r-name').value.trim(),icon:$('r-icon').value.trim()||'🍽️',category:$('r-cat').value,servings:Math.max(1,Math.floor(Number($('r-serv').value))||1),minutes:Math.max(0,Math.floor(Number($('r-min').value))||0),ingredients:lines($('r-ing').value).join('\n'),instructions:lines($('r-steps').value).join('\n')};
   if(!rec.name)return;
+  const raw=$('r-link').value.trim();
+  if(raw){const lk=linkInfo(raw)||linkInfo('https://'+raw);if(!lk){msg('Enter a full link, like https://www.instagram.com/...');return}rec.link=lk.url}else rec.link='';
   commit(()=>{if(editingRecipe){const r=recipeById(editingRecipe);if(r)Object.assign(r,rec);msg(`Updated ${rec.name}.`)}else{const id=uid('r');state.recipes.push({id,...rec});expanded.add(id);msg(`Added ${rec.name}.`)}});
   closeRecipe()});
 $('r-cancel').onclick=closeRecipe;
