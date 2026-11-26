@@ -69,10 +69,58 @@
   function addPoints(member, delta) { state.points[member] = (Number(state.points[member]) || 0) + (Number(delta) || 0); }
   function routine(id) { return state.routines.filter(function (r) { return r.id === id; })[0]; }
   function doneToday(id, l) { return ((l || logRead())[id] || []).indexOf(today()) >= 0; }
+  // Routines can repeat every day (no days set) or only on chosen weekdays (days = [1,4] for Monday and Thursday; Sunday = 0).
+  var DN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function dueOn(r, ds) { var d = r && r.days; if (!Array.isArray(d) || !d.length) return true; return d.indexOf(new Date(ds + 'T00:00:00').getDay()) >= 0; }
+  function daysLabel(days) {
+    if (!Array.isArray(days) || !days.length || days.length >= 7) return 'Every day';
+    var order = [1, 2, 3, 4, 5, 6, 0], pick = order.filter(function (x) { return days.indexOf(x) >= 0; });
+    var k = pick.join(',');
+    if (k === '1,2,3,4,5') return 'Weekdays';
+    if (k === '6,0') return 'Weekends';
+    return pick.map(function (x) { return DN[x]; }).join(', ');
+  }
+  // ---- Repeating tasks: t.repeat = { unit:'day'|'week'|'month'|'year', every:N, days:[0-6] (weeks only) }; t.date = current due date ----
+  function dayNum(ds) { return Math.round(Date.parse(ds + 'T00:00:00Z') / 864e5); }
+  function weekStart(ds) { return addDays(ds, -((new Date(ds + 'T00:00:00').getDay() + 6) % 7)); }
+  function nextDue(t) {
+    var r = t && t.repeat; if (!r || !t.date) return '';
+    var n = Math.max(1, parseInt(r.every, 10) || 1), d0 = t.date, anchor = t.anchor || t.date;
+    if (r.unit === 'day') return addDays(d0, n);
+    if (r.unit === 'week') {
+      if (!Array.isArray(r.days) || !r.days.length) return addDays(d0, 7 * n);
+      for (var i = 1; i <= 800; i++) {
+        var d = addDays(d0, i);
+        if (r.days.indexOf(new Date(d + 'T00:00:00').getDay()) >= 0 && ((dayNum(weekStart(d)) - dayNum(weekStart(anchor))) / 7) % n === 0) return d;
+      }
+      return addDays(d0, 7 * n);
+    }
+    var a = anchor.split('-').map(Number), c = d0.split('-').map(Number), y = c[0], m = c[1] - 1;
+    if (r.unit === 'month') { m += n; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; }
+    else { y += n; }
+    var dim = new Date(y, m + 1, 0).getDate();
+    return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(Math.min(a[2], dim)).padStart(2, '0');
+  }
+  function repeatLabel(r) {
+    if (!r) return '';
+    var n = Math.max(1, parseInt(r.every, 10) || 1), u = r.unit;
+    if (u === 'week' && Array.isArray(r.days) && r.days.length) {
+      var d = daysLabel(r.days); return n === 1 ? d : 'Every ' + n + ' weeks: ' + d;
+    }
+    var names = { day: 'Daily', week: 'Weekly', month: 'Monthly', year: 'Yearly' };
+    return n === 1 ? names[u] : 'Every ' + n + ' ' + u + 's';
+  }
+
+  // Streak = consecutive scheduled days done. Days a routine isn't scheduled are skipped; today doesn't break it until the day is over.
   function streak(id, l) {
-    var set = {}; ((l || logRead())[id] || []).forEach(function (d) { set[d] = 1; });
-    var d = today(); if (!set[d]) d = addDays(d, -1);
-    var n = 0; while (set[d]) { n++; d = addDays(d, -1); }
+    var set = {}, keys = []; ((l || logRead())[id] || []).forEach(function (d) { set[d] = 1; keys.push(d); });
+    if (!keys.length) return 0;
+    keys.sort(); var min = keys[0], r = routine(id), t = today(), d = t, n = 0;
+    while (d >= min) {
+      if (set[d]) n++;
+      else if (dueOn(r, d) && d !== t) break;
+      d = addDays(d, -1);
+    }
     return n;
   }
   // Tick or untick a routine for today: gives (or takes back) its "when done" points.
@@ -106,7 +154,7 @@
         (function (day) {
           s.routines.forEach(function (r) {
             var pen = Number(r.penalty) || 0;
-            if (pen <= 0 || (r.created && r.created > day)) return;
+            if (pen <= 0 || (r.created && r.created > day) || !dueOn(r, day)) return;
             if ((l[r.id] || []).indexOf(day) >= 0) return;
             var hid = 'pen|' + day + '|' + r.id;
             if (s.history.some(function (h) { return h.id === hid; })) return;
@@ -119,6 +167,20 @@
     }
     Object.keys(s.tasks).forEach(function (id) {
       var t = s.tasks[id], pen = Number(t.penalty) || 0;
+      // A repeating task left undone stays overdue until its next occurrence arrives, then rolls forward (missed one is penalised once).
+      if (t.repeat && !t.completed && t.date) {
+        for (var g = 0; g < 400; g++) {
+          var nx = nextDue(t); if (!nx || nx > td) break;
+          if (pen > 0 && !t.penaltyApplied) {
+            var hid = 'tp-' + id + '-' + t.date;
+            if (!s.history.some(function (h) { return h.id === hid; })) {
+              addPoints(t.assignee, -pen);
+              s.history.push({ id: hid, type: 'penalty', member: t.assignee, reason: 'Missed ' + t.title, delta: -pen, date: t.date + 'T23:59:00' });
+            }
+          }
+          t.date = nx; t.penaltyApplied = false; changed = true;
+        }
+      }
       if (pen > 0 && !t.completed && !t.penaltyApplied && t.date && new Date(t.date + 'T' + (t.time || '23:59')) < now) {
         addPoints(t.assignee, -pen); t.penaltyApplied = true;
         s.history.push({ type: 'penalty', member: t.assignee, reason: 'Overdue: ' + t.title, delta: -pen, date: now.toISOString() });
@@ -180,7 +242,7 @@
     KEY: KEY, RKEY: RKEY, MEMBERS: MEMBERS, SECTIONS: SECTIONS, byName: byName,
     ymd: ymd, today: today, addDays: addDays, esc: esc, uid: uid, signed: signed,
     load: load, save: save, settle: settle, logRead: logRead, logSave: logSave, addPoints: addPoints, routine: routine,
-    doneToday: doneToday, streak: streak, toggleRoutine: toggleRoutine, adjust: adjust, describe: describe,
+    doneToday: doneToday, streak: streak, dueOn: dueOn, daysLabel: daysLabel, nextDue: nextDue, repeatLabel: repeatLabel, toggleRoutine: toggleRoutine, adjust: adjust, describe: describe,
     onChange: onChange, ask: ask, mountTabbar: mountTabbar
   };
   Object.defineProperty(FH, 'state', { get: function () { return state; } });

@@ -108,8 +108,12 @@ function seed(s){
 function read(){try{const s=JSON.parse(localStorage.getItem(KEY)||'{}');return s&&typeof s==='object'?s:{}}catch(e){return{}}}
 function load(){const s=read();if(seed(s)){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}return s}
 
+function addDaysKey(k,n){const d=new Date(k+'T00:00:00');d.setDate(d.getDate()+n);return key(d)}
 function getTasks(s){const stored=s.tasks||{},items=[];
   Object.entries(stored).forEach(([id,t])=>items.push({kind:'task',id,title:t.title||id,date:t.date||'',time:t.time||'09:00',assignee:byName[t.assignee]?t.assignee:'Arun',completed:!!t.completed}));
+  // Show upcoming occurrences of repeating tasks (the task itself sits on its current due date).
+  Object.entries(stored).forEach(([id,t])=>{if(!t.repeat||!t.date||t.completed)return;let c={...t},n=0;
+    while(n<60){const nx=FH.nextDue(c);if(!nx||nx>addDaysKey(key(new Date()),180))break;items.push({kind:'task',id,title:t.title||id,date:nx,time:t.time||'09:00',assignee:byName[t.assignee]?t.assignee:'Arun',completed:false,projected:true});c.date=nx;n++}});
   if(!s.tasksSeeded)DEFAULTS.forEach(([id,title,time,person])=>{if(!stored[id])items.push({kind:'task',id,title,date:key(new Date()),time,assignee:person,completed:false})});
   return items.filter(t=>t.date)}
 function getMeals(s){const rec=Object.fromEntries((s.recipes||[]).map(r=>[r.id,r]));
@@ -132,6 +136,11 @@ function mealLink(m){const a=document.createElement('a');a.className='event meal
 function taskLink(t){const p=byName[t.assignee]||MEMBERS[0],a=document.createElement('a');a.className=`event${t.completed?' completed':''}`;a.style.cssText=`--member:${p.color};--member-bg:${p.color}18`;a.href='tasks.html';
   const time=document.createElement('time');time.textContent=fmtTime(t.time);const text=document.createElement('span');text.textContent=`${t.title} · ${t.assignee}`;a.append(time,text);return a}
 
+// Routines that repeat on chosen weekdays (not every day) appear on the matching dates.
+function recurring(s,date,k){
+  if(f.show==='Meals')return[];let log={};try{log=JSON.parse(localStorage.getItem('family-dashboard-routines-v1')||'{}')||{}}catch(e){}
+  return(s.routines||[]).filter(r=>Array.isArray(r.days)&&r.days.length&&r.days.length<7&&r.days.includes(date.getDay())&&byName[r.member]&&(f.person==='All'||r.member===f.person)&&(!r.created||r.created<=k))
+    .map(r=>({kind:'task',id:r.id,title:`${r.icon||''} ${r.name}`.trim(),date:k,time:r.section,assignee:r.member,completed:((log[r.id]||[]).includes(k))}))}
 function render(){
   const s=load();calendar.replaceChildren();calendar.className=`calendar ${view}`;
   document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));renderFilters();
@@ -147,6 +156,7 @@ function render(){
     const n=document.createElement('span');n.className='day-number';n.textContent=view==='day'?new Intl.DateTimeFormat(undefined,{weekday:'long',month:'long',day:'numeric'}).format(date):date.getDate();cell.append(n);
     meals.filter(m=>m.date===k).forEach(m=>cell.append(mealLink(m)));
     tasks.filter(t=>t.date===k).sort((a,b)=>a.time.localeCompare(b.time)).forEach(t=>cell.append(taskLink(t)));
+    recurring(s,date,k).forEach(t=>cell.append(taskLink(t)));
     calendar.append(cell)});
   renderMealPanel(dates,meals)}
 

@@ -40,6 +40,8 @@
     input,select{min-width:0;width:100%;border:1px solid var(--border);border-radius:8px;padding:9px;background:var(--bg);color:var(--text);font:inherit}
     .hint{grid-column:1/-1;margin:0;font-size:12px;color:var(--muted)}
     .actions{grid-column:1/-1;display:flex;gap:8px}
+    .daychips{display:flex;gap:6px;flex-wrap:wrap}.daychip{border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:99px;padding:7px 11px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}.daychip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+    .lbl{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}.daybtns{display:flex;gap:6px;margin-top:8px}
     .hidden{display:none!important}
     .empty{padding:14px 2px;color:var(--muted);font-size:14px}
     .message{min-height:20px;color:var(--muted);font-size:13px;margin:0 0 14px}
@@ -61,15 +63,16 @@
       <label>Icon<input id="rf-icon" maxlength="4" value="✅"></label>
       <label>Name<input id="rf-name" maxlength="60" required placeholder="e.g. Take a shower"></label>
       <label class="wide">Note (optional)<input id="rf-sub" maxlength="40" placeholder="e.g. tap to log min"></label>
+      <div class="wide"><div class="lbl">Repeats on</div><div class="daychips" id="rf-days"></div><div class="daybtns"><button type="button" class="pill" id="rf-every">Every day</button><button type="button" class="pill" id="rf-weekdays">Weekdays</button><button type="button" class="pill" id="rf-clear">Clear</button></div></div>
       <label>Points when done<input id="rf-points" type="number" step="1" value="1" required></label>
       <label>Points lost if not done<input id="rf-pen" type="number" step="1" min="0" value="0" required></label>
-      <p class="hint">Example: Shower, +1 when done, 2 lost if not done. Points lost are taken off at the end of the day. Use a negative number for "when done" if doing it should cost points.</p>
+      <p class="hint">Pick the days it repeats on, for example a pedicure every Monday, or a hair mask on Monday and Thursday. It only shows on the dashboard on those days. Example: Shower, +1 when done, 2 lost if not done. Points lost are taken off at the end of the day. Use a negative number for "when done" if doing it should cost points.</p>
       <div class="actions"><button class="button" id="rf-save" type="submit">Add routine</button><button class="button secondary" id="rf-cancel" type="button">Cancel</button></div>
     </form>
   </section>
 
   <section class="card">
-    <div class="head"><h2>Daily routines</h2><button class="button" id="add-routine" type="button">+ Add routine</button></div>
+    <div class="head"><h2>Routines (daily or on set days)</h2><button class="button" id="add-routine" type="button">+ Add routine</button></div>
     <div id="routine-list"></div>
   </section>
 
@@ -80,15 +83,19 @@
       <label class="wide">Task<input id="tf-title-in" maxlength="120" required placeholder="e.g. Take out the bins"></label>
       <label>Assigned to<select id="tf-assignee"></select></label>
       <label>Points when done<input id="tf-points" type="number" step="1" value="10" required></label>
-      <label>Date<input id="tf-date" type="date" required></label>
+      <label>Due date<input id="tf-date" type="date" required></label>
       <label>Time<input id="tf-time" type="time" value="09:00"></label>
+      <label class="wide">Repeat<select id="tf-repeat"><option value="">Does not repeat</option><option value="day">Daily</option><option value="weekdays">Weekdays</option><option value="week">Weekly</option><option value="month">Monthly</option><option value="year">Yearly</option><option value="custom">Customised…</option></select></label>
+      <div class="wide hidden" id="tf-custom"><div class="lbl">Repeat every</div><div style="display:flex;gap:8px"><input id="tf-every" type="number" min="1" max="365" step="1" value="1" style="max-width:90px"><select id="tf-unit"><option value="day">day(s)</option><option value="week">week(s)</option><option value="month">month(s)</option><option value="year">year(s)</option></select></div>
+        <div id="tf-daywrap" class="hidden" style="margin-top:10px"><div class="lbl">On these days (leave all off to use the due date's weekday)</div><div class="daychips" id="tf-days"></div></div></div>
+      <p class="hint">A repeating task moves to its next date when you tick it. If it isn't done, it shows as Overdue until the next occurrence arrives, then rolls forward (and any “points lost” are taken once).</p>
       <label class="wide">Points lost if not done by then<input id="tf-pen" type="number" step="1" min="0" value="0" required></label>
       <div class="actions"><button class="button" id="tf-save" type="submit">Add task</button><button class="button secondary" id="tf-cancel" type="button">Cancel</button></div>
     </form>
   </section>
 
   <section class="card">
-    <div class="head"><h2>One-off tasks</h2><button class="button" id="add-task" type="button">+ Add task</button></div>
+    <div class="head"><h2>Tasks (one-off or repeating)</h2><button class="button" id="add-task" type="button">+ Add task</button></div>
     <div class="progress"><div id="progress-bar"></div></div>
     <div class="muted" id="progress-label"></div>
     <div id="task-list"></div>
@@ -120,7 +127,7 @@ function renderRoutines(){
     SECTIONS.forEach(sec=>{const rs=items.filter(r=>r.section===sec);if(!rs.length)return;any=true;
       wrap.insertAdjacentHTML('beforeend',`<div class="sec">${sec}</div>`);
       rs.forEach(r=>{const p=Number(r.points)||0,pen=Number(r.penalty)||0,row=document.createElement('div');row.className='row';
-        row.innerHTML=`<span class="ricon">${esc(r.icon||'✅')}</span><div class="tmain"><div class="ttitle">${esc(r.name)}</div><div class="tmeta">${r.sub?esc(r.sub)+' · ':''}<span class="pp">${signed(p)} ★ when done</span>${pen>0?` · <span class="pn">−${pen} ★ if not done</span>`:''}</div></div><button type="button" class="pill edit" aria-label="Edit ${esc(r.name)}">✎</button><button type="button" class="pill del" aria-label="Delete ${esc(r.name)}">🗑</button>`;
+        row.innerHTML=`<span class="ricon">${esc(r.icon||'✅')}</span><div class="tmain"><div class="ttitle">${esc(r.name)}</div><div class="tmeta">${r.sub?esc(r.sub)+' · ':''}<b>${esc(FH.daysLabel(r.days))}</b> · <span class="pp">${signed(p)} ★ when done</span>${pen>0?` · <span class="pn">−${pen} ★ if not done</span>`:''}</div></div><button type="button" class="pill edit" aria-label="Edit ${esc(r.name)}">✎</button><button type="button" class="pill del" aria-label="Delete ${esc(r.name)}">🗑</button>`;
         row.querySelector('.edit').onclick=()=>openRoutine(r);
         row.querySelector('.del').onclick=e=>FH.ask(e.currentTarget,()=>delRoutine(r));
         wrap.append(row)})});
@@ -128,14 +135,15 @@ function renderRoutines(){
 }
 function openRoutine(r){closeTask();editRoutine=r?r.id:null;
   $('rf-member').value=r?r.member:(who!=='All'?who:MEMBERS[0].name);$('rf-section').value=r?r.section:'Morning';$('rf-icon').value=r?r.icon:'✅';
-  $('rf-name').value=r?r.name:'';$('rf-sub').value=r?r.sub:'';$('rf-points').value=r?r.points:1;$('rf-pen').value=r?(r.penalty||0):0;
+  $('rf-name').value=r?r.name:'';$('rf-sub').value=r?r.sub:'';$('rf-points').value=r?r.points:1;$('rf-pen').value=r?(r.penalty||0):0;setDays(r?(r.days||[]):[]);
   $('rf-title').textContent=r?'Edit routine':'Add routine';$('rf-save').textContent=r?'Save changes':'Add routine';
   $('routine-form-card').classList.remove('hidden');$('routine-form-card').scrollIntoView({behavior:'smooth',block:'start'});$('rf-name').focus()}
 function closeRoutine(){editRoutine=null;$('routine-form-card').classList.add('hidden')}
 $('routine-form').addEventListener('submit',e=>{e.preventDefault();
   const name=$('rf-name').value.trim(),points=int($('rf-points').value),pen=int($('rf-pen').value);
   if(!name||points===null||pen===null||pen<0){msg('Enter a name and whole numbers for the points.');return}
-  const data={member:$('rf-member').value,section:$('rf-section').value,icon:$('rf-icon').value.trim()||'✅',name,sub:$('rf-sub').value.trim(),points,penalty:pen};
+  const days=getDays();if(days===null){msg('Pick at least one day.');return}
+  const data={member:$('rf-member').value,section:$('rf-section').value,icon:$('rf-icon').value.trim()||'✅',name,sub:$('rf-sub').value.trim(),points,penalty:pen,days};
   const s=FH.state;
   if(editRoutine){const r=FH.routine(editRoutine);if(r){const wasDone=FH.doneToday(r.id);if(wasDone){FH.addPoints(r.member,-(Number(r.points)||0))} Object.assign(r,data);if(wasDone)FH.addPoints(r.member,Number(r.points)||0);msg(`Updated ${name}.`)}}
   else{s.routines.push({id:FH.uid('r'),...data,created:FH.today()});msg(`Added ${name} to ${data.member}'s ${data.section.toLowerCase()} routine.`)}
@@ -152,37 +160,63 @@ const fmtDate=d=>{const x=new Date(d+'T00:00');return isNaN(x)?d:x.toLocaleDateS
 const fmtTime=t=>{const x=new Date('1970-01-01T'+t);return isNaN(x)?t:x.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})};
 
 function renderTasks(){
-  const list=$('task-list');list.replaceChildren();
-  const tasks=Object.entries(FH.state.tasks).map(([id,t])=>({id,...t})).filter(t=>who==='All'||t.assignee===who).sort((a,b)=>(a.completed-b.completed)||`${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
-  const done=tasks.filter(t=>t.completed).length;
-  $('progress-bar').style.width=(tasks.length?Math.round(done/tasks.length*100):0)+'%';$('progress-label').textContent=`${done} of ${tasks.length} tasks complete`;
+  const list=$('task-list');list.replaceChildren();const td=FH.today(),now=new Date();
+  const isLate=t=>!t.completed&&t.date&&new Date(`${t.date}T${t.time||'23:59'}`)<now;
+  const tasks=Object.entries(FH.state.tasks).map(([id,t])=>({id,...t})).filter(t=>who==='All'||t.assignee===who);
+  const grp=t=>t.completed?3:isLate(t)?0:t.date<=td?1:2;
+  tasks.sort((a,b)=>grp(a)-grp(b)||`${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+  const rel=tasks.filter(t=>!t.repeat||t.date<=td||t.lastDone===td),done=rel.filter(t=>t.repeat?t.lastDone===td:t.completed).length;
+  $('progress-bar').style.width=(rel.length?Math.round(done/rel.length*100):0)+'%';$('progress-label').textContent=`${done} of ${rel.length} tasks done for today`;
   if(!tasks.length){list.innerHTML='<div class="empty">No tasks. Tap “+ Add task”.</div>';return}
-  const now=new Date();
-  tasks.forEach(t=>{const p=Number(t.points)||0,pen=Number(t.penalty)||0,late=!t.completed&&t.date&&new Date(`${t.date}T${t.time||'23:59'}`)<now;
+  const heads=['Overdue','Due today','Upcoming','Completed'];let last=-1;
+  tasks.forEach(t=>{const g=grp(t);if(g!==last){last=g;list.insertAdjacentHTML('beforeend',`<div class="sec">${heads[g]}</div>`)}
+    const p=Number(t.points)||0,pen=Number(t.penalty)||0,late=g===0;
     const row=document.createElement('div');row.className='row'+(t.completed?' done':'');row.style.cssText=mstyle(t.assignee);
-    row.innerHTML=`<input type="checkbox" ${t.completed?'checked':''} aria-label="Mark ${esc(t.title)} complete"><div class="tmain"><div class="ttitle">${esc(t.title)}</div><div class="tmeta"><span class="who">${esc(t.assignee)}</span> · ${esc(fmtDate(t.date))}, ${esc(fmtTime(t.time||'09:00'))}${late?' · <span class="late">Overdue</span>':''}<br><span class="pp">${signed(p)} ★ when done</span>${pen>0?` · <span class="pn">−${pen} ★ if not done</span>`:''}</div></div><button type="button" class="pill edit" aria-label="Edit ${esc(t.title)}">✎</button><button type="button" class="pill del" aria-label="Delete ${esc(t.title)}">🗑</button>`;
+    row.innerHTML=`<input type="checkbox" ${t.completed?'checked':''} aria-label="Mark ${esc(t.title)} complete"><div class="tmain"><div class="ttitle">${esc(t.title)}</div><div class="tmeta"><span class="who">${esc(t.assignee)}</span> · ${esc(fmtDate(t.date))}, ${esc(fmtTime(t.time||'09:00'))}${late?' · <span class="late">Overdue</span>':''}${t.repeat?`<br>🔁 <b>${esc(FH.repeatLabel(t.repeat))}</b>${t.lastDone?' · last done '+esc(fmtDate(t.lastDone)):''}`:''}<br><span class="pp">${signed(p)} ★ when done</span>${pen>0?` · <span class="pn">−${pen} ★ if not done</span>`:''}</div></div><button type="button" class="pill edit" aria-label="Edit ${esc(t.title)}">✎</button><button type="button" class="pill del" aria-label="Delete ${esc(t.title)}">🗑</button>`;
     row.querySelector('input').onchange=e=>toggleTask(t.id,e.target.checked);
     row.querySelector('.edit').onclick=()=>openTask(t);
     row.querySelector('.del').onclick=e=>FH.ask(e.currentTarget,()=>delTask(t.id));
     list.append(row)})}
 function toggleTask(id,checked){const t=FH.state.tasks[id];if(!t)return;
+  if(t.repeat){if(checked){refundPenalty(t);award(t);delete t.awarded;const st=FH.today();let nd=FH.nextDue(t);for(let i=0;i<400&&nd&&nd<=st;i++){t.date=nd;nd=FH.nextDue(t)}t.date=nd||t.date;t.lastDone=st;t.doneCount=(t.doneCount||0)+1;t.penaltyApplied=false;msg(`${t.assignee} ${signed(Number(t.points)||0)} ★ · next due ${fmtDate(t.date)}`)}FH.save();FH.settle();render();return}
   if(checked&&!t.completed){refundPenalty(t);t.completed=true;award(t);msg(`${t.assignee} ${signed(t.awarded.stars)} ★`)}
   else if(!checked&&t.completed){refundAward(t);t.completed=false;msg('Task reopened; points taken back.')}
   FH.save();FH.settle();render()}
 function openTask(t){closeRoutine();editTask=t?t.id:null;
-  $('tf-title-in').value=t?t.title:'';$('tf-assignee').value=t?t.assignee:(who!=='All'?who:'Arun');$('tf-points').value=t?(t.points??10):10;$('tf-pen').value=t?(t.penalty||0):0;$('tf-date').value=t?t.date:FH.today();$('tf-time').value=t?(t.time||'09:00'):'09:00';
+  $('tf-title-in').value=t?t.title:'';$('tf-assignee').value=t?t.assignee:(who!=='All'?who:'Arun');$('tf-points').value=t?(t.points??10):10;$('tf-pen').value=t?(t.penalty||0):0;$('tf-date').value=t?t.date:FH.today();$('tf-time').value=t?(t.time||'09:00'):'09:00';repeatToForm(t?t.repeat:null);
   $('tf-title').textContent=t?'Edit task':'Add task';$('tf-save').textContent=t?'Save changes':'Add task';
   $('task-form-card').classList.remove('hidden');$('task-form-card').scrollIntoView({behavior:'smooth',block:'start'});$('tf-title-in').focus()}
+function syncRepeatUI(){const v=$('tf-repeat').value;$('tf-custom').classList.toggle('hidden',v!=='custom');$('tf-daywrap').classList.toggle('hidden',!(v==='custom'&&$('tf-unit').value==='week'))}
+$('tf-repeat').onchange=syncRepeatUI;$('tf-unit').onchange=syncRepeatUI;
+function repeatToForm(r){let v='';if(r){const n=r.every||1,d=r.days||[];
+    if(r.unit==='week'&&n===1&&d.join()==='1,2,3,4,5')v='weekdays';else if(n===1&&!d.length)v=r.unit;else v='custom';
+    $('tf-every').value=n;$('tf-unit').value=r.unit;setDays(d,'tf-days')}else{$('tf-every').value=1;$('tf-unit').value='week';setDays([],'tf-days')}
+  $('tf-repeat').value=v;syncRepeatUI()}
+function repeatFromForm(){const v=$('tf-repeat').value;if(!v)return{repeat:null};
+  if(v==='weekdays')return{repeat:{unit:'week',every:1,days:[1,2,3,4,5]}};
+  if(v!=='custom')return{repeat:{unit:v,every:1,days:[]}};
+  const every=int($('tf-every').value);if(!every||every<1||every>365)return{error:'Repeat every needs a whole number from 1 to 365.'};
+  const unit=$('tf-unit').value;return{repeat:{unit,every,days:unit==='week'?getDays('tf-days'):[]}}}
 function closeTask(){editTask=null;$('task-form-card').classList.add('hidden')}
 $('task-form').addEventListener('submit',e=>{e.preventDefault();
   const title=$('tf-title-in').value.trim(),points=int($('tf-points').value),pen=int($('tf-pen').value),date=$('tf-date').value||FH.today(),time=$('tf-time').value||'09:00',assignee=$('tf-assignee').value;
   if(!title||points===null||pen===null||pen<0){msg('Enter a task name and whole numbers for the points.');return}
+  const rp=repeatFromForm();if(rp.error){msg(rp.error);return}
   const s=FH.state;
-  if(editTask){const t=s.tasks[editTask];if(!t){closeTask();return}const was=t.completed;refundPenalty(t);if(was)refundAward(t);Object.assign(t,{title,points,penalty:pen,date,time,assignee});if(was)award(t);msg(`Updated “${title}”.`)}
-  else{s.tasks[FH.uid('task')]={title,points,penalty:pen,date,time,assignee,completed:false};msg(`Added “${title}” for ${assignee}.`)}
+  if(editTask){const t=s.tasks[editTask];if(!t){closeTask();return}const was=t.completed;refundPenalty(t);if(was)refundAward(t);Object.assign(t,{title,points,penalty:pen,date,time,assignee,anchor:date});if(rp.repeat){t.repeat=rp.repeat;t.completed=false;delete t.awarded}else delete t.repeat;if(was&&!rp.repeat)award(t);msg(`Updated “${title}”.`)}
+  else{s.tasks[FH.uid('task')]={title,points,penalty:pen,date,time,assignee,completed:false,anchor:date,...(rp.repeat?{repeat:rp.repeat}:{})};msg(`Added “${title}” for ${assignee}.`)}
   FH.save();FH.settle();closeTask();render()});
 $('tf-cancel').onclick=closeTask;$('add-task').onclick=()=>openTask();
 function delTask(id){const t=FH.state.tasks[id];if(!t)return;refundPenalty(t);if(t.completed)refundAward(t);delete FH.state.tasks[id];if(editTask===id)closeTask();FH.save();msg(`Deleted “${t.title}”.`);render()}
+
+/* ===== repeat-on-days picker (all seven on = every day) ===== */
+const DAY_ORDER=[1,2,3,4,5,6,0],DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function chipsOf(box){return $(box).querySelectorAll('.daychip')}
+function setDays(days,box){box=box||'rf-days';const on=(!days||!days.length)?(box==='rf-days'?DAY_ORDER:[]):days;chipsOf(box).forEach(b=>{const v=on.includes(Number(b.dataset.day));b.classList.toggle('on',v);b.setAttribute('aria-pressed',String(v))})}
+function getDays(box){box=box||'rf-days';const sel=[...chipsOf(box)].filter(b=>b.classList.contains('on')).map(b=>Number(b.dataset.day));if(box==='tf-days')return sel.sort((a,b)=>a-b);if(!sel.length)return null;return sel.length===7?[]:sel.sort((a,b)=>a-b)}
+function buildChips(box,startOn){DAY_ORDER.forEach(d=>{const b=document.createElement('button');b.type='button';b.className='daychip'+(startOn?' on':'');b.dataset.day=d;b.textContent=DAY_NAMES[d];b.setAttribute('aria-pressed',String(!!startOn));b.onclick=()=>{b.classList.toggle('on');b.setAttribute('aria-pressed',String(b.classList.contains('on')))};$(box).append(b)})}
+buildChips('rf-days',true);buildChips('tf-days',false);
+$('rf-every').onclick=()=>setDays([]);$('rf-weekdays').onclick=()=>setDays([1,2,3,4,5]);$('rf-clear').onclick=()=>$('rf-days').querySelectorAll('.daychip').forEach(b=>{b.classList.remove('on');b.setAttribute('aria-pressed','false')});
 
 /* ===== wiring ===== */
 function render(){renderFilters();renderRoutines();renderTasks()}

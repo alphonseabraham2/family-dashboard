@@ -72,7 +72,7 @@ function render(){
   const s=FH.state,log=FH.logRead(),board=document.getElementById('board');board.replaceChildren();
   MEMBERS.forEach(m=>{
     const col=el('div','col');col.style.cssText=mstyle(m);
-    const items=s.routines.filter(r=>r.member===m.name),done=items.filter(r=>FH.doneToday(r.id,log)).length;
+    const todayStr=FH.today(),items=s.routines.filter(r=>r.member===m.name&&FH.dueOn(r,todayStr)),done=items.filter(r=>FH.doneToday(r.id,log)).length;
     const best=Math.max(0,...items.map(r=>FH.streak(r.id,log))),pts=s.points[m.name]||0;
     const g=(s.rewards[m.name]||[]).find(r=>r.id===s.goals[m.name]);
     const goalHtml=g?`<a class="goal" href="rewards.html" title="${esc(g.name)}">${esc(g.icon||'🎯')} ${esc(g.name)}</a><div class="bar"><i style="width:${Math.max(0,Math.min(100,pts/g.stars*100))}%"></i></div><span class="ready">${pts>=g.stars?'ready!':(g.stars-pts)+' to go'}</span>`:`<a class="goal" href="rewards.html">Set a goal</a>`;
@@ -86,7 +86,7 @@ function render(){
       box.append(el('div','shead',`${sec}${isNow?'<span class="now-badge">NOW</span>':''}<span class="count">${sd}/${list.length}</span>`));
       list.forEach(r=>{
         const isDone=FH.doneToday(r.id,log),k=FH.streak(r.id,log),pen=Number(r.penalty)||0,p=Number(r.points)||0;
-        const sub=[r.sub,pen>0?`−${pen} if missed`:''].filter(Boolean).join(' · ');
+        const sub=[r.sub,Array.isArray(r.days)&&r.days.length&&r.days.length<7?FH.daysLabel(r.days):'',pen>0?`−${pen} if missed`:''].filter(Boolean).join(' · ');
         const b=el('button','task'+(isDone?' done':''),`<span class="ticon">${esc(r.icon||'✅')}</span><span><div class="tname">${esc(r.name)}</div>${sub?`<div class="tsub">${esc(sub)}</div>`:''}</span>${p!==1?`<span class="pts${p<0?' neg':''}">${signed(p)}</span>`:''}${k?`<span class="streak">🔥${k}</span>`:''}`);
         b.type='button';b.setAttribute('aria-pressed',isDone);b.onclick=()=>{FH.toggleRoutine(r.id);render()};box.append(b)});
       col.append(box)});
