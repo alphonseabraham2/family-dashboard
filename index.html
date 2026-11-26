@@ -93,7 +93,10 @@ function render(){
     const edit=el('a','edit',`⚙ Edit ${esc(m.name)}'s routine`);edit.href=`tasks.html#${encodeURIComponent(m.name)}`;col.append(edit);
     board.append(col)})}
 
+let shown=FH.today()+nowSection();
 function clock(){const d=new Date(),h=d.getHours();
+  const key=FH.today()+nowSection();if(key!==shown){shown=key;FH.load();render()} // new day or new part of the day: refresh the board and apply missed-task penalties
+
   document.getElementById('current-date').textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   document.getElementById('current-time').textContent=d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
   document.getElementById('greeting').textContent=`Good ${h<12?'morning':h<17?'afternoon':'evening'}`}
